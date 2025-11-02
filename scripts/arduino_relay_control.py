@@ -50,8 +50,8 @@ class ArduinoResponses:
 
 class PersistentArduinoController:
     """
-    Controlador que mantiene la conexión abierta usando un lockfile
-    para evitar el auto-reset del Arduino.
+    Controller that maintains an open connection using a lockfile
+    to avoid Arduino auto-reset.
     """
     
     _instance = None
@@ -59,7 +59,7 @@ class PersistentArduinoController:
     _lockfile = None
     
     def __new__(cls, port: str = '/dev/arduino-relay', baudrate: int = 115200):
-        # Singleton por puerto
+        # Singleton per port
         if cls._instance is None or cls._instance.port != port:
             cls._instance = super().__new__(cls)
             cls._instance.port = port
@@ -69,18 +69,18 @@ class PersistentArduinoController:
         return cls._instance
     
     def get_connection(self) -> Optional[serial.Serial]:
-        """Obtiene la conexión persistente, creándola si es necesario."""
+        """Gets the persistent connection, creating it if necessary."""
         
-        # Si ya tenemos conexión activa, usarla
+        # If we already have an active connection, use it
         if self._connection and self._connection.is_open:
             return self._connection
             
-        # Intentar obtener el lock
+        # Try to acquire the lock
         try:
             self._lockfile = open(self._lockfile_path, 'w')
             fcntl.flock(self._lockfile.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
             
-            # Somos los únicos con el lock, crear conexión
+            # We're the only ones with the lock, create connection
             logging.info(f"Acquiring persistent connection to {self.port}")
             
             self._connection = serial.Serial(
@@ -90,12 +90,12 @@ class PersistentArduinoController:
                 write_timeout=self.timeout
             )
             
-            # Solo esperar reset la primera vez
+            # Only wait for reset the first time
             time.sleep(2)
             self._connection.reset_input_buffer()
             self._connection.reset_output_buffer()
             
-            # Verificar que funciona
+            # Verify it works
             self._connection.write(b"ID\n")
             self._connection.flush()
             response = self._connection.readline().decode('utf-8', errors='ignore').strip()
@@ -107,8 +107,8 @@ class PersistentArduinoController:
             return self._connection
             
         except (IOError, OSError):
-            # Otro proceso tiene el lock, la conexión ya existe
-            # Esperar un poco y reintentar
+            # Another process has the lock, connection already exists
+            # Wait a bit and retry
             logging.debug("Another process holds the Arduino connection")
             time.sleep(0.1)
             return None
@@ -119,7 +119,7 @@ class PersistentArduinoController:
             return None
     
     def send_command(self, command: str) -> Optional[str]:
-        """Envía un comando usando la conexión persistente."""
+        """Sends a command using the persistent connection."""
         
         max_retries = 3
         for attempt in range(max_retries):
@@ -129,12 +129,12 @@ class PersistentArduinoController:
                 continue
                 
             try:
-                # Enviar comando
+                # Send command
                 cmd_bytes = f"{command}\n".encode('utf-8')
                 conn.write(cmd_bytes)
                 conn.flush()
                 
-                # Leer respuesta
+                # Read response
                 response_lines = []
                 for _ in range(10):
                     line = conn.readline().decode('utf-8', errors='ignore').strip()
@@ -158,7 +158,7 @@ class PersistentArduinoController:
         return None
     
     def _cleanup(self):
-        """Limpia la conexión y el lockfile."""
+        """Cleans up connection and lockfile."""
         if self._connection:
             try:
                 self._connection.close()
@@ -178,9 +178,9 @@ class PersistentArduinoController:
         self._cleanup()
 
 
-# Actualizar la clase principal para usar el controlador persistente
+# Update main class to use persistent controller
 class ArduinoRelayController:
-    """Interfaz compatible que usa conexión persistente internamente."""
+    """Compatible interface that uses persistent connection internally."""
     
     def __init__(self, port: str = '/dev/arduino-relay', baudrate: int = 115200, timeout: float = 2.0):
         self.port = port
@@ -190,15 +190,15 @@ class ArduinoRelayController:
         logger.info(f"Initialized ArduinoRelayController - Port: {port}, Baudrate: {baudrate}")
 
     def connect(self) -> bool:
-        """Conecta usando el controlador persistente."""
+        """Connects using the persistent controller."""
         return self._persistent.get_connection() is not None
 
     def disconnect(self) -> None:
-        """No-op - la conexión se mantiene persistente."""
+        """No-op - connection remains persistent."""
         pass
 
     def is_connected(self) -> bool:
-        """Verifica si hay conexión disponible."""
+        """Checks if connection is available."""
         return self._persistent.get_connection() is not None
 
     # -------- Single-channel helpers (kept for compatibility) --------
@@ -262,7 +262,7 @@ class ArduinoRelayController:
             if self._is_success_response(response):
                 logger.debug(f"OK: {response}")
                 return True
-            logger.error(f"Command failed. Resp: {response}")
+            logger.error(f"Command failed. Response: {response}")
         return False
 
     def _validate_channel(self, channel: int) -> None:
@@ -368,13 +368,13 @@ class ArduinoRelayController:
 
 
 class DaemonClient:
-    """Cliente simple para comunicarse con el daemon."""
+    """Simple client to communicate with the daemon."""
     
     def __init__(self, socket_path: str = "/tmp/arduino-relay.sock"):
         self.socket_path = socket_path
     
     def is_daemon_running(self) -> bool:
-        """Verifica si el daemon está corriendo."""
+        """Checks if daemon is running."""
         try:
             with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
                 sock.settimeout(1.0)
@@ -384,7 +384,7 @@ class DaemonClient:
             return False
     
     def send_command(self, command: str) -> dict:
-        """Envía comando al daemon."""
+        """Sends command to daemon."""
         try:
             with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
                 sock.settimeout(5.0)
@@ -477,7 +477,7 @@ def main() -> int:
         parser.print_help()
         return 3
 
-    # Detectar si el daemon está corriendo
+    # Detect if daemon is running
     daemon_client = DaemonClient()
     use_daemon = daemon_client.is_daemon_running()
     
@@ -489,9 +489,9 @@ def main() -> int:
         return _execute_direct(args)
 
 def _execute_via_daemon(args, daemon_client: DaemonClient) -> int:
-    """Ejecuta comandos vía daemon."""
+    """Executes commands via daemon."""
     try:
-        # Construir comando para el daemon
+        # Build command for daemon
         if args.action == 'on':
             cmd = f"ON {' '.join(map(str, args.channels))}"
         elif args.action == 'off':
@@ -509,7 +509,7 @@ def _execute_via_daemon(args, daemon_client: DaemonClient) -> int:
         else:
             return 3
             
-        # Enviar al daemon
+        # Send to daemon
         result = daemon_client.send_command(cmd)
         
         if result.get("success", False):
@@ -525,7 +525,7 @@ def _execute_via_daemon(args, daemon_client: DaemonClient) -> int:
         return 2
 
 def _execute_direct(args) -> int:
-    """Ejecuta comandos directamente (metodo original)."""
+    """Executes commands directly (original method)."""
     controller = ArduinoRelayController(
         port=args.port,
         baudrate=args.baudrate,

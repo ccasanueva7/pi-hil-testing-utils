@@ -1,49 +1,49 @@
 #!/bin/bash
-# Script para identificar dispositivos seriales y generar regla udev
+# Script to identify USB serial devices and generate udev rules
 
-echo "=== Identificación de Dispositivos Seriales USB ==="
+echo "=== USB Serial Device Identification ==="
 echo
-echo "1. Buscando dispositivos seriales conectados..."
+echo "1. Searching for connected USB serial devices..."
 serial_devices=$(lsusb | grep -i "arduino\|ch340\|cp210\|ftdi\|pl2303\|usb-serial\|uart\|bridge")
 if [ -z "$serial_devices" ]; then
-    echo "No se encontraron dispositivos seriales USB conocidos."
-    echo "Mostrando todos los dispositivos USB:"
+    echo "No known USB serial devices found."
+    echo "Showing all USB devices:"
     lsusb
     echo
-    echo "Verifica que los dispositivos estén conectados y detectados por el sistema."
+    echo "Please verify that devices are connected and detected by the system."
     exit 1
 fi
-echo "Dispositivos encontrados:"
+echo "Found devices:"
 echo "$serial_devices"
 echo
-echo "2. Puertos serie disponibles:"
-ls -la /dev/tty* | grep -E "(USB|ACM)" || echo "No se encontraron puertos USB/ACM"
+echo "2. Available serial ports:"
+ls -la /dev/tty* | grep -E "(USB|ACM)" || echo "No USB/ACM ports found"
 echo
-echo "3. Información detallada de dispositivos:"
+echo "3. Detailed device information:"
 for device in /dev/ttyUSB* /dev/ttyACM*; do
     if [ -e "$device" ]; then
-        echo "--- Dispositivo: $device ---"
+        echo "--- Device: $device ---"
         udevadm info -a -n "$device" | grep -E "(KERNEL|SUBSYSTEM|DRIVER|ATTRS\{idVendor\}|ATTRS\{idProduct\}|ATTRS\{serial\}|ATTRS\{product\}|ATTRS\{manufacturer\})" | head -10
         echo
     fi
 done
-echo "=== Creación de regla udev ==="
+echo "=== Creating udev rule ==="
 echo
-echo "1. Identificar el dispositivo que a mapear en la lista anterior"
-echo "2. Anotar los valores de idVendor, idProduct y serial (si está disponible)"
-echo "3. Ejecutar el siguiente comando para crear la regla:"
+echo "1. Identify the device to map from the list above"
+echo "2. Note the values of idVendor, idProduct, and serial (if available)"
+echo "3. Run the following command to create the rule:"
 echo
 echo "sudo nano /etc/udev/rules.d/99-serial-devices.rules"
 echo
-echo "4. Agrega una línea similar a esta (reemplazar valores):"
-echo 'SUBSYSTEM=="tty", ATTRS{idVendor}=="XXXX", ATTRS{idProduct}=="YYYY", SYMLINK+="nombre-descriptivo", MODE="0666", GROUP="dialout"'
+echo "4. Add a line similar to this (replace values):"
+echo 'SUBSYSTEM=="tty", ATTRS{idVendor}=="XXXX", ATTRS{idProduct}=="YYYY", SYMLINK+="descriptive-name", MODE="0666", GROUP="dialout"'
 echo
-echo "5. Si el modelo tiene número de serie único disponible, es recomendable usarlo para mayor precisión:"
-echo 'SUBSYSTEM=="tty", ATTRS{idVendor}=="XXXX", ATTRS{idProduct}=="YYYY", ATTRS{serial}=="ZZZZ", SYMLINK+="nombre-descriptivo", MODE="0666", GROUP="dialout"'
+echo "5. If the device has a unique serial number available, it is recommended to use it for greater precision:"
+echo 'SUBSYSTEM=="tty", ATTRS{idVendor}=="XXXX", ATTRS{idProduct}=="YYYY", ATTRS{serial}=="ZZZZ", SYMLINK+="descriptive-name", MODE="0666", GROUP="dialout"'
 echo
-echo "6. Recargar las reglas udev:"
+echo "6. Reload udev rules:"
 echo "sudo udevadm control --reload-rules"
 echo "sudo udevadm trigger"
 echo
-echo "7. Desconectar y reconectar el dispositivo, luego verificar:"
-echo "ls -la /dev/nombre-descriptivo"
+echo "7. Disconnect and reconnect the device, then verify:"
+echo "ls -la /dev/descriptive-name"

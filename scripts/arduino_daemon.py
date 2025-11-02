@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Arduino Relay Daemon - Mantiene conexión persistente para evitar auto-reset.
+Arduino Relay Daemon - Maintains persistent connection to avoid auto-reset.
 """
 
 import json
@@ -34,20 +34,20 @@ class ArduinoRelayDaemon:
         self.arduino_lock = threading.Lock()
 
     def start(self):
-        """Inicia el daemon."""
+        """Starts the daemon."""
         if self._is_already_running():
             logger.error("Daemon already running")
             return False
 
-        # Conectar Arduino
+        # Connect Arduino
         if not self._connect_arduino():
             return False
 
-        # Crear socket Unix
+        # Create Unix socket
         if not self._setup_socket():
             return False
 
-        # Escribir PID
+        # Write PID
         with open(self.pidfile, 'w') as f:
             f.write(str(os.getpid()))
 
@@ -69,12 +69,12 @@ class ArduinoRelayDaemon:
                 timeout=2.0
             )
 
-            # Esperar reset inicial (solo una vez)
+            # Wait for initial reset (only once)
             time.sleep(3)
             self.arduino.reset_input_buffer()
             self.arduino.reset_output_buffer()
 
-            # Verificar conexión
+            # Verify connection
             self.arduino.write(b"ID\n")
             response = self.arduino.readline().decode('utf-8', errors='ignore')
 
@@ -139,7 +139,7 @@ class ArduinoRelayDaemon:
                 self.arduino.write(f"{command}\n".encode('utf-8'))
                 self.arduino.flush()
 
-                # Leer respuesta
+                # Read response
                 lines = []
                 for _ in range(10):
                     line = self.arduino.readline().decode('utf-8', errors='ignore').strip()

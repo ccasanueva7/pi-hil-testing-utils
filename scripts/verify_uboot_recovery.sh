@@ -21,11 +21,11 @@ fi
 # Check network connectivity
 echo ""
 echo "2. Checking network configuration..."
-PI_IP="192.168.20.234" # Cambiar a la IP de tu PC
+PI_IP="192.168.20.234" # Change to host IP
 if ip addr show | grep -q "$PI_IP"; then
-    echo "   ✓ Pi has IP: $PI_IP"
+    echo "   ✓ Host has IP: $PI_IP"
 else
-    echo "   ⚠ Pi doesn't have expected IP: $PI_IP"
+    echo "   ⚠ Host doesn't have expected IP: $PI_IP"
     echo "   Current IPs:"
     ip -4 -br addr show
     echo "   Please ensure your PC has the IP $PI_IP configured."
@@ -52,10 +52,10 @@ echo ""
 echo "4. Testing TFTP server access..."
 TEST_FILE="$TFTP_ROOT/test.txt"
 echo "TFTP test file" | sudo tee "$TEST_FILE" > /dev/null
-sudo chown tftp:tftp "$TEST_FILE" # Asegurar que el archivo de test tiene el propietario correcto
-sudo chmod 644 "$TEST_FILE"      # Asegurar que el archivo de test tiene permisos de lectura
+sudo chown tftp:tftp "$TEST_FILE" # Ensure test file has correct owner
+sudo chmod 644 "$TEST_FILE"      # Ensure test file has read permissions
 
-# Corregir la sintaxis de tftp para descarga no interactiva usando pipe
+# Fix tftp syntax for non-interactive download using pipe
 if echo "get test.txt /tmp/tftp_test.txt" | tftp "$PI_IP" 2>/dev/null; then
     echo "   ✓ TFTP GET works"
     rm -f /tmp/tftp_test.txt

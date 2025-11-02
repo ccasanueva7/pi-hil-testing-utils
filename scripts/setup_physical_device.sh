@@ -1,5 +1,5 @@
 #!/bin/bash
-# Setup GL-MT300N-V2
+# Setup GL-MT300N-V2 Physical Device
 
 set -e
 
@@ -21,65 +21,65 @@ warn() { printf '… %s\n' "$*" >&2; }
 err()  { printf '✖ %s\n' "$*" >&2; }
 
 check_arduino() {
-  log "Arduino…"
-  [[ -e "/dev/arduino-relay" ]] || { err "/dev/arduino-relay no existe"; exit 1; }
-  command -v python3 >/dev/null || { err "python3 no disponible"; exit 1; }
-  python3 "$ARDUINO_SCRIPT" status || { err "Arduino no responde"; exit 1; }
+  log "Checking Arduino..."
+  [[ -e "/dev/arduino-relay" ]] || { err "/dev/arduino-relay does not exist"; exit 1; }
+  command -v python3 >/dev/null || { err "python3 not available"; exit 1; }
+  python3 "$ARDUINO_SCRIPT" status || { err "Arduino not responding"; exit 1; }
   ok "Arduino OK"
 }
 
 check_serial_port() {
-  log "Serial…"
-  [[ -e "$ROUTER_PORT" ]] || { err "$ROUTER_PORT no existe"; exit 1; }
-  ok "Serial OK"
+  log "Checking serial port..."
+  [[ -e "$ROUTER_PORT" ]] || { err "$ROUTER_PORT does not exist"; exit 1; }
+  ok "Serial port OK"
 }
 
 power_on_sequence() {
-  log "Power seq…"
+  log "Power sequence..."
   python3 "$ARDUINO_SCRIPT" off  "$POWER_RELAY_CHANNEL"
   python3 "$ARDUINO_SCRIPT" on  "$SERIAL_RELAY_CHANNEL"
   sleep 3
-  python3 "$ARDUINO_SCRIPT" on "$POWER_RELAY_CHANNEL" # prendo router
+  python3 "$ARDUINO_SCRIPT" on "$POWER_RELAY_CHANNEL" # Turn on router
   sleep "$WAIT_AFTER_POWER"
-  python3 "$ARDUINO_SCRIPT" on "$SERIAL_RELAY_CHANNEL" # prendo serial
+  python3 "$ARDUINO_SCRIPT" on "$SERIAL_RELAY_CHANNEL" # Turn on serial
   sleep "$WAIT_AFTER_SERIAL"
-  ok "Power seq OK"
+  ok "Power sequence OK"
 }
 
 test_serial_comm() {
-  log "Comms…"
-  [[ -f "$CHECK_SCRIPT" ]] || { err "Falta $CHECK_SCRIPT"; exit 1; }
+  log "Testing serial communication..."
+  [[ -f "$CHECK_SCRIPT" ]] || { err "Missing $CHECK_SCRIPT"; exit 1; }
   if python3 "$CHECK_SCRIPT" "$ROUTER_PORT" --baudrate "$BAUDRATE"; then
-    ok "Comms OK"
+    ok "Serial communication OK"
   else
-    warn "Comms no verificadas (continuo)"
+    warn "Serial communication not verified (continuing)"
   fi
 }
 
 verify_deps() {
-  log "Deps…"
-  command -v uv >/dev/null || { err "Falta uv (curl -LsSf https://astral.sh/uv/install.sh | sh)"; exit 1; }
+  log "Verifying dependencies..."
+  command -v uv >/dev/null || { err "Missing uv (curl -LsSf https://astral.sh/uv/install.sh | sh)"; exit 1; }
   if [[ -d "$OPENWRT_TESTS_DIR" ]]; then
     pushd "$OPENWRT_TESTS_DIR/.." >/dev/null
-    make tests/setup || warn "make tests/setup falló (continuo)"
+    make tests/setup || warn "make tests/setup failed (continuing)"
     popd >/dev/null
   else
-    warn "No existe $OPENWRT_TESTS_DIR"
+    warn "Directory does not exist: $OPENWRT_TESTS_DIR"
   fi
-  ok "Deps OK"
+  ok "Dependencies OK"
 }
 
 verify_target_config() {
-  log "Target…"
-  [[ -f "$OPENWRT_TESTS_DIR/targets/gl-mt300n-v2.yaml" ]] || { err "Falta targets/gl-mt300n-v2.yaml"; exit 1; }
-  # [[ -f "$OPENWRT_TESTS_DIR/drivers/arduino_power_driver.py" ]] || { err "Falta drivers/arduino_power_driver.py"; exit 1; }
-  ok "Target OK"
+  log "Verifying target configuration..."
+  [[ -f "$OPENWRT_TESTS_DIR/targets/gl-mt300n-v2.yaml" ]] || { err "Missing targets/gl-mt300n-v2.yaml"; exit 1; }
+  # [[ -f "$OPENWRT_TESTS_DIR/drivers/arduino_power_driver.py" ]] || { err "Missing drivers/arduino_power_driver.py"; exit 1; }
+  ok "Target configuration OK"
 }
 
 summary() {
   printf '\n'
-  ok "Setup listo"
-  printf 'Relés: power=%s, serial=%s\n' "$POWER_RELAY_CHANNEL" "$SERIAL_RELAY_CHANNEL"
+  ok "Setup ready"
+  printf 'Relays: power=%s, serial=%s\n' "$POWER_RELAY_CHANNEL" "$SERIAL_RELAY_CHANNEL"
   printf 'Run: cd %s/.. && make tests/gl-mt300n-v2 V=s\n' "$OPENWRT_TESTS_DIR"
 }
 
