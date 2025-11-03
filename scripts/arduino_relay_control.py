@@ -438,11 +438,15 @@ Exit Codes:
     on_parser = subparsers.add_parser('on', help='Turn ON one or more channels')
     on_parser.add_argument('channels', nargs='+', type=int, choices=range(6),
                            help='Relay channels (0-5). Multiple allowed.')
+    on_parser.add_argument('--glinet-sequence', action='store_true',
+                           help='Use GL.iNet MT300N-v2 power sequence: disconnect serial (relay 1) before power on (relay 0), then reconnect serial after boot')
 
     # OFF
     off_parser = subparsers.add_parser('off', help='Turn OFF one or more channels')
     off_parser.add_argument('channels', nargs='+', type=int, choices=range(6),
                             help='Relay channels (0-5). Multiple allowed.')
+    off_parser.add_argument('--glinet-sequence', action='store_true',
+                            help='Use GL.iNet MT300N-v2 power off sequence: power off (relay 0) then reconnect serial (relay 1)')
 
     # TOGGLE
     tog_parser = subparsers.add_parser('toggle', help='Toggle one or more channels')
@@ -477,6 +481,12 @@ def main() -> int:
         parser.print_help()
         return 3
 
+    # GL.iNet sequence requires direct execution (daemon doesn't support sequences)
+    use_daemon = False
+    if hasattr(args, 'glinet_sequence') and args.glinet_sequence:
+        logger.info("GL.iNet sequence requested - using direct connection")
+        return _execute_direct(args)
+    
     # Detect if daemon is running
     daemon_client = DaemonClient()
     use_daemon = daemon_client.is_daemon_running()
@@ -538,13 +548,47 @@ def _execute_direct(args) -> int:
     try:
         success = False
         if args.action == 'on':
-            if len(args.channels) == 1:
+            # GL.iNet special sequence: disconnect serial (relay 1) → power on (relay 0) → wait → reconnect serial (relay 1 OFF)
+            if hasattr(args, 'glinet_sequence') and args.glinet_sequence and len(args.channels) == 1 and args.channels[0] == 0:
+                logger.info("Using GL.iNet MT300N-v2 power sequence")
+                # 1. Disconnect serial (relay 1 ON)
+                if not controller.relay_on(1):
+                    logger.error("Failed to disconnect serial line")
+                    return 2
+                time.sleep(0.2)
+                # 2. Power on device (relay 0 ON)
+                if not controller.relay_on(0):
+                    logger.error("Failed to power on device")
+                    return 2
+                logger.info("Device powered on, waiting 10s for boot before reconnecting serial...")
+                time.sleep(2)
+                # 3. Reconnect serial (relay 1 OFF)
+                if not controller.relay_off(1):
+                    logger.error("Failed to reconnect serial line")
+                    return 2
+                logger.info("GL.iNet power sequence completed successfully")
+                success = True
+            elif len(args.channels) == 1:
                 success = controller.relay_on(args.channels[0])
             else:
                 success = controller.relays_on(args.channels)
 
         elif args.action == 'off':
-            if len(args.channels) == 1:
+            # GL.iNet special sequence: power off (relay 0) → reconnect serial (relay 1 OFF)
+            if hasattr(args, 'glinet_sequence') and args.glinet_sequence and len(args.channels) == 1 and args.channels[0] == 0:
+                logger.info("Using GL.iNet MT300N-v2 power off sequence")
+                # 1. Power off device (relay 0 OFF)
+                if not controller.relay_off(0):
+                    logger.error("Failed to power off device")
+                    return 2
+                time.sleep(0.2)
+                # 2. Ensure serial is reconnected (relay 1 OFF)
+                if not controller.relay_off(1):
+                    logger.error("Failed to reconnect serial line")
+                    return 2
+                logger.info("GL.iNet power off sequence completed")
+                success = True
+            elif len(args.channels) == 1:
                 success = controller.relay_off(args.channels[0])
             else:
                 success = controller.relays_off(args.channels)
