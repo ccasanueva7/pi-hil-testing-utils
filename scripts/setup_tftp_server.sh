@@ -1,19 +1,19 @@
 #!/bin/bash
-# Script to configure and install TFTP server for U-Boot recovery
+# Script to configure and install dnsmasq TFTP server for U-Boot recovery
 # Compatible with openwrt-tests directory structure (subdirectories per device)
 #
 # This script:
-# - Installs 'tftpd-hpa' only if not already installed
+# - Installs 'dnsmasq' only if not already installed
 # - Creates root directory for TFTP files (/srv/tftp)
 # - Creates subdirectories for each testbed device
-# - Configures 'tftpd-hpa' to start automatically on boot
+# - Configures 'dnsmasq' for TFTP-only mode (DNS and DHCP disabled)
 # - Provides useful commands for service administration
 
 set -e
 
 TFTP_ROOT="${HIL_TFTP_ROOT:-/srv/tftp}"
-TFTP_USER="tftp"
-SERVICE_NAME="tftpd-hpa"
+SERVICE_NAME="dnsmasq"
+TFTP_LISTEN_IP="${HIL_TFTP_LISTEN_IP:-192.168.20.234}"
 
 # Testbed devices dictionary for FCEFYN lab
 # Format: "device_id:description"
@@ -21,6 +21,7 @@ SERVICE_NAME="tftpd-hpa"
 DEFAULT_DEVICES=(
     "belkin_rt3200_1:Belkin RT3200 #1 (Linksys E8450)"
     "belkin_rt3200_2:Belkin RT3200 #2 (Linksys E8450)"
+    "belkin_rt3200_3:Belkin RT3200 #3 (Linksys E8450)"
     "gl_mt300n_v2:GL.iNet GL-MT300N-v2 (Mango)"
 )
 
@@ -66,9 +67,9 @@ is_package_installed() {
     dpkg -l "$1" 2>/dev/null | grep -q "^ii"
 }
 
-print_header "Configuring TFTP Server for U-Boot Recovery"
+print_header "Configuring dnsmasq TFTP Server for U-Boot Recovery"
 
-# 1. Install tftpd-hpa only if not already installed
+# 1. Install dnsmasq only if not already installed
 if is_package_installed "$SERVICE_NAME"; then
     print_success "Package '$SERVICE_NAME' is already installed"
 else
@@ -81,7 +82,7 @@ fi
 # 2. Create and configure TFTP root directory
 print_info "Configuring TFTP root directory: $TFTP_ROOT"
 sudo mkdir -p "$TFTP_ROOT"
-sudo chown -R "$TFTP_USER:$TFTP_USER" "$TFTP_ROOT"
+sudo chown -R "$USER:$USER" "$TFTP_ROOT"
 sudo chmod -R 755 "$TFTP_ROOT"
 print_success "Root directory configured"
 
@@ -101,7 +102,7 @@ for device_entry in "${TESTBED_DEVICES[@]}"; do
         print_info "  ✓ $device_id/ (already exists) - $device_desc"
     else
         sudo mkdir -p "$device_dir"
-        sudo chown "$TFTP_USER:$TFTP_USER" "$device_dir"
+        sudo chown "$USER:$USER" "$device_dir"
         sudo chmod 755 "$device_dir"
         print_success "  ✓ $device_id/ (created) - $device_desc"
     fi
@@ -112,45 +113,64 @@ done
 echo ""
 print_success "Created/verified $device_count device subdirectories"
 
-# 4. Create metadata directory
-print_info "Configuring metadata directory..."
-sudo mkdir -p "$TFTP_ROOT/.metadata"
-sudo chown "$TFTP_USER:$TFTP_USER" "$TFTP_ROOT/.metadata"
-print_success "Metadata directory configured"
+# 4. Create firmwares directory for shared firmware storage
+print_info "Creating firmwares directory..."
+sudo mkdir -p "$TFTP_ROOT/firmwares"
+sudo chown "$USER:$USER" "$TFTP_ROOT/firmwares"
+sudo chmod 755 "$TFTP_ROOT/firmwares"
+print_success "Firmwares directory configured"
 
-# 5. Configure tftpd-hpa
-print_info "Configuring file '/etc/default/$SERVICE_NAME'..."
-sudo tee "/etc/default/$SERVICE_NAME" > /dev/null <<EOF
-# /etc/default/tftpd-hpa
-# Configuration for high-availability TFTP server
-# Compatible with openwrt-tests structure
+# 5. Configure dnsmasq for TFTP-only mode
+print_info "Configuring dnsmasq for TFTP-only mode..."
+sudo mkdir -p /etc/dnsmasq.d
+sudo tee /etc/dnsmasq.d/tftp.conf > /dev/null <<EOF
+# Disable DNS completely
+port=0
 
-TFTP_USERNAME="$TFTP_USER"
-TFTP_DIRECTORY="$TFTP_ROOT"
-TFTP_ADDRESS="0.0.0.0:69"
-TFTP_OPTIONS="--secure --create"
+# Disable DHCP completely (empty value disables DHCP on all interfaces)
+no-dhcp-interface=
+
+# TFTP configuration
+enable-tftp
+tftp-root=$TFTP_ROOT
+
+# Listen only on the specified IP address
+listen-address=$TFTP_LISTEN_IP
+bind-interfaces
 EOF
-print_success "Configuration file updated"
+print_success "dnsmasq configuration file created at /etc/dnsmasq.d/tftp.conf"
 
-# 6. Start and enable the service
+# 6. Test dnsmasq configuration
+print_info "Testing dnsmasq configuration..."
+if sudo dnsmasq --test 2>&1 | grep -q "syntax check OK"; then
+    print_success "dnsmasq configuration is valid"
+else
+    print_error "dnsmasq configuration has errors"
+    print_info "Check configuration with: sudo dnsmasq --test"
+    exit 1
+fi
+
+# 7. Start and enable the service
 print_info "Restarting and enabling service '$SERVICE_NAME'..."
 sudo systemctl restart "$SERVICE_NAME"
 sudo systemctl enable "$SERVICE_NAME" >/dev/null 2>&1
 print_success "Service configured for automatic startup"
 
-# 7. Verify service status
+# 8. Verify service status
 echo ""
 if systemctl is-active --quiet "$SERVICE_NAME"; then
-    print_success "TFTP server is running correctly"
+    print_success "dnsmasq TFTP server is running correctly"
 else
-    print_error "TFTP server is not active"
+    print_error "dnsmasq TFTP server is not active"
     print_info "Verify with: sudo systemctl status $SERVICE_NAME"
+    print_info "Check logs with: sudo journalctl -xeu $SERVICE_NAME"
 fi
 
-# 8. Show created structure
+# 9. Show created structure
 print_header "TFTP Structure Created"
 
 echo "Root directory: $TFTP_ROOT"
+echo "Listen address: $TFTP_LISTEN_IP:69"
 echo ""
 echo "Subdirectories per device:"
 for device_entry in "${TESTBED_DEVICES[@]}"; do
@@ -159,6 +179,10 @@ for device_entry in "${TESTBED_DEVICES[@]}"; do
     echo "  📁 $device_id/"
     echo "     └─ $device_desc"
 done
+
+echo ""
+echo "  📁 firmwares/"
+echo "     └─ Shared firmware storage directory"
 
 echo ""
 print_info "To upload firmware to a specific device:"
@@ -195,7 +219,10 @@ cat <<EOF
     ls -lh $TFTP_ROOT/*/
 
 • Test TFTP connectivity:
-    tftp localhost -c get test_file
+    tftp $TFTP_LISTEN_IP -c get test_file
+
+• Test dnsmasq configuration:
+    sudo dnsmasq --test
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 EOF
@@ -205,8 +232,13 @@ print_success "Configuration completed successfully"
 echo ""
 echo "Optional environment variables:"
 echo "  HIL_TFTP_ROOT         - Change root directory (default: /srv/tftp)"
+echo "  HIL_TFTP_LISTEN_IP    - IP address to listen on (default: 192.168.20.234)"
 echo "  HIL_TESTBED_DEVICES   - Comma-separated list of devices"
 echo ""
-echo "Example of custom devices:"
+echo "Example of custom configuration:"
+echo "  export HIL_TFTP_LISTEN_IP=\"192.168.1.100\""
 echo "  export HIL_TESTBED_DEVICES=\"router1:My Router 1,router2:My Router 2\""
 echo "  ./setup_tftp_server.sh"
+echo ""
+print_info "Important: This configures dnsmasq for TFTP-only mode."
+print_info "DNS and DHCP services are disabled to allow external DHCP servers."
