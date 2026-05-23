@@ -29,6 +29,24 @@
       "results_path": "physical/belkin_rt3200_3-24.10.6/report.xml"
     },
     {
+      "id": "physical-bpi_r4_1-24.10.6",
+      "device": "bananapi_bpi-r4",
+      "display_name": "BPi-R4 #1",
+      "place": "bpi_r4_1",
+      "release": "24.10.6",
+      "type": "physical",
+      "results_path": "physical/bpi_r4_1-24.10.6/report.xml"
+    },
+    {
+      "id": "physical-openwrt_one_1-24.10.6",
+      "device": "openwrt_one",
+      "display_name": "OpenWrt One #1",
+      "place": "openwrt_one_1",
+      "release": "24.10.6",
+      "type": "physical",
+      "results_path": "physical/openwrt_one_1-24.10.6/report.xml"
+    },
+    {
       "id": "qemu-single-qemu_x86_64-24.10.6",
       "device": "qemu_x86_64",
       "display_name": "QEMU single · qemu_x86_64",
@@ -63,42 +81,6 @@
       "release": "25.12.2",
       "type": "qemu-mesh",
       "results_path": "qemu-mesh/qemu_x86_64-25.12.2/report.xml"
-    },
-    {
-      "id": "physical-bpi_r4_1-24.10.6",
-      "device": "bananapi_bpi-r4",
-      "display_name": "BPi-R4 #1",
-      "place": "bpi_r4_1",
-      "release": "24.10.6",
-      "type": "physical",
-      "results_path": "physical/bpi_r4_1-24.10.6/report.xml"
-    },
-    {
-      "id": "physical-bpi_r4_2-24.10.6",
-      "device": "bananapi_bpi-r4",
-      "display_name": "BPi-R4 #2",
-      "place": "bpi_r4_2",
-      "release": "24.10.6",
-      "type": "physical",
-      "results_path": "physical/bpi_r4_2-24.10.6/report.xml"
-    },
-    {
-      "id": "physical-openwrt_one_1-24.10.6",
-      "device": "openwrt_one",
-      "display_name": "OpenWrt One #1",
-      "place": "openwrt_one_1",
-      "release": "24.10.6",
-      "type": "physical",
-      "results_path": "physical/openwrt_one_1-24.10.6/report.xml"
-    },
-    {
-      "id": "physical-openwrt_one_2-24.10.6",
-      "device": "openwrt_one",
-      "display_name": "OpenWrt One #2",
-      "place": "openwrt_one_2",
-      "release": "24.10.6",
-      "type": "physical",
-      "results_path": "physical/openwrt_one_2-24.10.6/report.xml"
     },
     {
       "id": "physical-belkin_rt3200_1-25.12.2",
