@@ -25,13 +25,27 @@ sequenceDiagram
 
 ```
 docs/ci-results/results/
-├── devices.json                              # device registry
+├── devices.json                                    # device registry
 ├── physical/
 │   ├── belkin_rt3200_1-24.10.6/
 │   │   └── report.xml
 │   ├── belkin_rt3200_2-24.10.6/
 │   │   └── report.xml
-│   └── belkin_rt3200_3-24.10.6/
+│   ├── belkin_rt3200_3-24.10.6/
+│   │   └── report.xml
+│   ├── bpi_r4_1-24.10.6/
+│   │   └── report.xml
+│   ├── openwrt_one_1-24.10.6/
+│   │   └── report.xml
+│   ├── belkin_rt3200_1-25.12.2/
+│   │   └── report.xml
+│   ├── belkin_rt3200_2-25.12.2/
+│   │   └── report.xml
+│   ├── belkin_rt3200_3-25.12.2/
+│   │   └── report.xml
+│   ├── bpi_r4_1-25.12.2/
+│   │   └── report.xml
+│   └── openwrt_one_1-25.12.2/
 │       └── report.xml
 ├── qemu-single/
 │   ├── qemu_x86_64-24.10.6/
