@@ -37,6 +37,12 @@ Key terms used across the FCEFyN testbed documentation.
 **mac80211_hwsim**
 : A Linux kernel module that creates virtual IEEE 802.11 (WiFi) radios. Used in combination with vwifi to simulate WiFi connectivity between QEMU VMs without physical hardware.
 
+**node_openwrt_info**
+: A Prometheus metric exported by node_exporter (with custom textfile collector or scrape labels) on each DUT, carrying `firmware` and `target` as labels so the Lab Overview dashboard can show what's running on each device.
+
+**node_systemd_unit_state**
+: A node_exporter metric describing whether a systemd unit is in a given state (`active`, `failed`, `inactive`, …). Used by the Orchestrator Host dashboard's Lab Services section to assert that `labgrid-exporter.service`, `pdudaemon.service`, and `ser2net.service` are running.
+
 **openwrt-tests**
 : The test suite and pytest infrastructure (in `lime-packages`) that defines the test cases for both physical DUTs and virtual mesh nodes.
 
