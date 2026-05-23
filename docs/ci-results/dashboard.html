@@ -225,6 +225,24 @@
     .card-meta a:hover { color: var(--accent-hover); text-decoration: underline; }
 
     .empty-state { grid-column: 1/-1; text-align: center; padding: 48px 24px; color: var(--text-muted); }
+
+    @keyframes shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position:  400px 0; }
+    }
+    .skeleton-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 16px;
+      height: 160px; overflow: hidden;
+    }
+    .skeleton-line {
+      height: 12px; border-radius: 4px; margin-bottom: 10px;
+      background: linear-gradient(90deg, var(--border) 25%, var(--surface-alt) 50%, var(--border) 75%);
+      background-size: 400px 100%;
+      animation: shimmer 1.4s infinite;
+    }
+    .skeleton-line.short { width: 55%; }
+    .skeleton-line.long  { width: 88%; }
     .no-results-msg { display: none; text-align: center; padding: 20px; color: var(--text-muted); font-size: 13px; grid-column: 1/-1; }
 
     @media (max-width: 768px) {
@@ -314,7 +332,12 @@
   </div>
 
   <div class="device-grid" id="device-grid">
-    <div class="empty-state"><p>Loading…</p></div>
+    <div class="skeleton-card"><div class="skeleton-line short"></div><div class="skeleton-line long"></div><div class="skeleton-line short" style="margin-top:20px"></div><div class="skeleton-line long"></div></div>
+    <div class="skeleton-card"><div class="skeleton-line short"></div><div class="skeleton-line long"></div><div class="skeleton-line short" style="margin-top:20px"></div><div class="skeleton-line long"></div></div>
+    <div class="skeleton-card"><div class="skeleton-line short"></div><div class="skeleton-line long"></div><div class="skeleton-line short" style="margin-top:20px"></div><div class="skeleton-line long"></div></div>
+    <div class="skeleton-card"><div class="skeleton-line short"></div><div class="skeleton-line long"></div><div class="skeleton-line short" style="margin-top:20px"></div><div class="skeleton-line long"></div></div>
+    <div class="skeleton-card"><div class="skeleton-line short"></div><div class="skeleton-line long"></div><div class="skeleton-line short" style="margin-top:20px"></div><div class="skeleton-line long"></div></div>
+    <div class="skeleton-card"><div class="skeleton-line short"></div><div class="skeleton-line long"></div><div class="skeleton-line short" style="margin-top:20px"></div><div class="skeleton-line long"></div></div>
   </div>
 </main>
 
