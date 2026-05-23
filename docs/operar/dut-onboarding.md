@@ -6,22 +6,24 @@ Onboard a new DUT or replace hardware on an existing switch port.
 
 ## Summary: files to change
 
-Repos involved: **fcefyn-testbed-utils** (lab config) and **libremesh-tests** (labnet, ansible, targets).
+Repos involved: **fcefyn-testbed-utils** (lab config), **aparcar/openwrt-tests** (`labnet.yaml`, Ansible exporter), and **libremesh-tests** (LibreMesh `targets/*.yaml` only).
 
 | Step | Repo | File / action |
 |------|------|----------------|
 | 1. Hardware | - | USB serial to hub, cable to switch, power (relay or PoE) |
 | 2. udev | fcefyn-testbed-utils | `configs/templates/99-serial-devices.rules` → `/etc/udev/rules.d/` |
 | 3. dut-config | fcefyn-testbed-utils | `configs/dut-config.yaml` (`duts` section) |
-| 4. labnet | libremesh-tests | `labnet.yaml` (devices, device_instances) |
-| 5. Exporter / dnsmasq | libremesh-tests | `ansible/files/exporter/labgrid-fcefyn/exporter.yaml`, `dnsmasq.conf` |
-| 6. PDUDaemon | libremesh-tests | `ansible/files/exporter/labgrid-fcefyn/pdudaemon.conf` (if power changes) |
+| 4. labnet | openwrt-tests | `labnet.yaml` (devices, device_instances) |
+| 5. Exporter / dnsmasq | openwrt-tests | `ansible/files/exporter/labgrid-fcefyn/exporter.yaml`, `dnsmasq.conf` |
+| 6. PDUDaemon | openwrt-tests | `ansible/files/exporter/labgrid-fcefyn/pdudaemon.conf` (if power changes) |
 | 7. Targets | libremesh-tests | `targets/<device>.yaml` (only if new device type) |
-| 8. Netplan | libremesh-tests | `ansible/files/exporter/labgrid-fcefyn/netplan.yaml` (if new VLAN) |
+| 8. Netplan | openwrt-tests | `ansible/files/exporter/labgrid-fcefyn/netplan.yaml` (if new VLAN) |
 | 9. TFTP | Host | `mkdir /srv/tftp/<place>/`, firmware, symlink |
-| 10. Observability | fcefyn-testbed-utils | Install exporter on DUT + add `observability_duts` entry (see [observabilidad](../configuracion/observabilidad.md)) |
-| 11. Deploy | - | Ansible (`playbook_labgrid.yml`) |
-| 12. Verify | - | `labgrid-client places`, serial, SSH |
+| 10. Observability config | fcefyn-testbed-utils | Add `observability_duts` entry in Ansible defaults (see [observabilidad](../configuracion/observabilidad.md)) |
+| 11. Deploy | - | Ansible (`playbook_labgrid.yml` + `playbook_testbed.yml --tags observability`) |
+| 12. Provision | fcefyn-testbed-utils | [`provision_dut.py --device <name>`](provision-dut.md) (mesh IPs + internet) |
+| 13. Exporter | fcefyn-testbed-utils | [`setup_dut_exporter.py --device <name>`](setup-dut-exporter.md) (Prometheus metrics) |
+| 14. Verify | - | `labgrid-client places`, serial, SSH, Grafana metrics |
 
 ---
 
@@ -75,14 +77,14 @@ In `fcefyn-testbed-utils/configs/dut-config.yaml`, add under `duts`:
     switch_port: 3                  # physical switch port
     switch_vlan_isolated: 106       # free VLAN (100-108)
     tftp_path: "belkin_rt3200_4/"
-    libremesh_fixed_ip: "10.13.200.XXX"   # LibreMesh fixed IP (avoid collisions)
+    libremesh_fixed_ip: "10.13.200.XXX"   # Mesh SSH/control IP on VLAN 200 (avoid collisions)
 ```
 
-For PoE DUTs: use a **single** PDUDaemon PDU name `fcefyn-poe` and set `pdu_index` to the switch PoE port number (same index passed to `poe_switch_control.py`). See `openwrt_one` and `librerouter_1` in `configs/dut-config.yaml` and `libremesh-tests` `ansible/files/exporter/labgrid-fcefyn/exporter.yaml`.
+For PoE DUTs: use PDU name `fcefyn-poe` and set `pdu_index` to the switch PoE port number (same index passed to `poe_switch_control.py`). See `openwrt_one` in `configs/dut-config.yaml` and **openwrt-tests** `ansible/files/exporter/labgrid-fcefyn/exporter.yaml`.
 
 ### 5. labnet.yaml
 
-In `libremesh-tests/labnet.yaml`:
+In [openwrt-tests `labnet.yaml`](https://github.com/aparcar/openwrt-tests/blob/main/labnet.yaml):
 
 - If **device type already exists** and you add another instance (e.g. another Belkin): add under `device_instances`:
 
@@ -99,7 +101,7 @@ In `libremesh-tests/labnet.yaml`:
 
 ### 6. Exporter and dnsmasq
 
-In `libremesh-tests/ansible/files/exporter/labgrid-fcefyn/`:
+In **openwrt-tests** `ansible/files/exporter/labgrid-fcefyn/`:
 
 **exporter.yaml** - add place with RawSerialPort, PDUDaemonPort, TFTPProvider, NetworkService:
 
@@ -157,9 +159,10 @@ On the host:
 
 ```bash
 sudo mkdir -p /srv/tftp/belkin_rt3200_4
-# Copy firmware to device type firmwares dir
+# Place firmware under firmwares/<device>/{openwrt,libremesh}/
 # Symlink with U-Boot expected name (see tftp-server.md)
-ln -sf /srv/tftp/firmwares/linksys_e8450/openwrt-*.bin /srv/tftp/belkin_rt3200_4/linksys_e8450-initramfs-kernel.bin
+ln -sf /srv/tftp/firmwares/belkin_rt3200/libremesh/lime-24.10.5-mediatek-mt7622-linksys_e8450-initramfs-kernel.bin \
+  /srv/tftp/belkin_rt3200_4/lime-24.10.5-mediatek-mt7622-linksys_e8450-initramfs-kernel.bin
 ```
 
 See [tftp-server](../configuracion/tftp-server.md) for naming per device.

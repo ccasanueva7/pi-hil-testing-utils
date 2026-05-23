@@ -38,7 +38,7 @@ Trunks carry several VLANs; each DUT has a dedicated access port.
 | SG2016P port | Device       | VLAN | Type   |
 |--------------|--------------|------|--------|
 | 1              | OpenWrt One       | 104  | Access |
-| 2              | LibreRouter #1    | 105  | Access (PoE + 48V→12V splitter) |
+| 2              | LibreRouter #1    | 105  | Access |
 | 3              | LibreRouter #2    | 106  | Access |
 | 4              | LibreRouter #3    | 107  | Access |
 | 9              | Lenovo T430 (server) | Trunk | Trunk |
@@ -82,10 +82,10 @@ Testbed VLAN configuration is **not done manually** on the switch; these tools a
 
 | Tool | Use |
 |------|-----|
-| **switch-vlan** | labgrid-switch-abstraction CLI: per-DUT VLAN change (`switch-vlan <dut> <vlan>`, `--restore`, `--restore-all`). Used by tests and manual ops. |
+| **switch-vlan** | [labgrid-switch-abstraction](https://github.com/fcefyn-testbed/labgrid-switch-abstraction) CLI: per-DUT VLAN change (`switch-vlan <dut> <vlan>`, `--restore`, `--restore-all`). Used by tests and manual ops. |
 | **labgrid-bound-connect** | SSH ProxyCommand (`socat` + `SO_BINDTODEVICE`) binds each DUT alias to its isolated VLAN. See [SSH access to DUTs](../operar/dut-ssh-access.md). |
 
-Day-to-day: [Routine operations - Dynamic VLAN](../operar/lab-routine-operations.md#dynamic-vlan-and-switch-vlan) (`switch-vlan` / `labgrid-switch-abstraction`; design: [Lab architecture](../diseno/lab-architecture.md)).
+Day-to-day: [Routine operations - Dynamic VLAN](../operar/lab-routine-operations.md#dynamic-vlan-and-switch-vlan) (`switch-vlan` / [labgrid-switch-abstraction](https://github.com/fcefyn-testbed/labgrid-switch-abstraction); design: [Lab architecture](../diseno/lab-architecture.md)).
 
 !!! note "Manual configuration (reference)"
     For recovery or debug: one test VLAN per access port (untagged); trunk ports with all VLANs tagged; PVID and ingress as in §2 (Admit All).
@@ -132,7 +132,7 @@ end
 ansible-playbook -i ansible/inventory/hosts.yml ansible/playbook_testbed.yml --tags poe_switch -K
 ```
 
-**Manual install:** Install `labgrid-switch-abstraction` (`pip install git+https://github.com/fcefyn-testbed/labgrid-switch-abstraction.git`). Copy `scripts/switch/poe_switch_control.py` to `/usr/local/bin/`. Switch config in `~/.config/switch.conf`.
+**Manual install:** the openwrt-tests [`playbook_labgrid.yml`](https://github.com/aparcar/openwrt-tests/blob/main/ansible/playbook_labgrid.yml) installs `labgrid-switch-abstraction` via pipx for every lab (see [Ansible and Labgrid](ansible-labgrid.md)); only run `pip install git+https://github.com/fcefyn-testbed/labgrid-switch-abstraction.git` manually if the playbook has not been applied. Copy `scripts/switch/poe_switch_control.py` to `/usr/local/bin/`. Switch config in `~/.config/switch.conf`.
 
 !!! warning "Credentials (out of repo)"
     That file holds the switch password: restrictive perms (`chmod 600`) and do not commit to git.
@@ -147,11 +147,47 @@ chmod 600 ~/.config/switch.conf
 poe_switch_control.py on 1    # Power on port 1 (OpenWrt One)
 poe_switch_control.py off 1   # Power off
 poe_switch_control.py cycle 1 # Power cycle (off, 5s, on)
-poe_switch_control.py on 2    # Port 2 (Librerouter 1)
+arduino_relay_control.py on 4 # Librerouter 1 (relay, not PoE)
 ```
 
 !!! note "Running with sudo"
     Both `poe_switch_control.py` and `switch-vlan` read config from the home of the user who invoked sudo (`SUDO_USER`). If you run `sudo switch-vlan libremesh`, password comes from `/home/<user>/.config/switch.conf`, not `/root/.config/`.
+
+#### Multi-user setup (recommended for labs with remote devs)
+
+Remote developers SSH as a shared user (e.g. `labgrid-dev`), not as the lab admin. For `switch-vlan` to work for any SSH user without per-user duplication, install the conf system-wide. `labgrid-switch-abstraction` reads `/etc/switch.conf` automatically as fallback when no per-user `~/.config/switch.conf` exists (see `client.py` in [labgrid-switch-abstraction](https://github.com/fcefyn-testbed/labgrid-switch-abstraction)).
+
+```bash
+sudo groupadd -f labgrid
+sudo usermod -aG labgrid <admin-user>
+sudo usermod -aG labgrid <ssh-shared-user>   # e.g. labgrid-dev
+sudo install -m 640 -g labgrid /home/<admin>/.config/switch.conf /etc/switch.conf
+
+# Optional: symlink the admin's per-user conf to the system-wide one to keep one source of truth
+mv ~/.config/switch.conf ~/.config/switch.conf.bak
+ln -s /etc/switch.conf ~/.config/switch.conf
+```
+
+Group changes only apply to **new** sessions: log out and SSH in again so the `labgrid` group is loaded (verify with `id`). Existing sessions keep the old group set.
+
+The shared lock file `/tmp/switch.lock` (used to serialize SSH sessions to the switch) must also be group-writable so any user in `labgrid` can acquire it:
+
+```bash
+sudo rm -f /tmp/switch.lock
+sudo install -m 0664 -g labgrid /dev/null /tmp/switch.lock
+
+# Persist across reboots (systemd-tmpfiles recreates /tmp at boot)
+sudo tee /etc/tmpfiles.d/switch-lock.conf >/dev/null <<'EOF'
+f /tmp/switch.lock 0664 root labgrid -
+EOF
+sudo systemd-tmpfiles --create
+```
+
+Verify from a remote machine (no local switch credentials needed):
+
+```bash
+ssh <lab-host> 'whoami; ls -la /etc/switch.conf /tmp/switch.lock; switch-vlan --help'
+```
 
 !!! note "PoE and concurrent SSH sessions"
     PDUDaemon may invoke several `poe_switch_control.py` in parallel (multiple PoE DUTs). TP-Link firmware **does not reliably tolerate** concurrent SSH sessions (timeouts). The script serializes access with a lock (`/tmp/switch.lock`, `fcntl.flock`); background calls queue.
@@ -164,8 +200,8 @@ poe_switch_control.py on 2    # Port 2 (Librerouter 1)
 !!! note "WAN PHY timeout and second link (LAN)"
     With PoE on port 1, U-Boot on WAN (EN8811H) can hit PHY timeout. **Two links:** WAN (PoE) to port 1; LAN to port 16. Port 16 is VLAN 104 (untagged, PVID 104) so DHCP/TFTP reach the host. More in [duts-config OpenWrt One](duts-config.md#openwrt-one).
 
-!!! note "LibreRouter 1 (port 2) and PoE"
-    Uses PoE via 48V→12V splitter. LibreRouter needs passive PoE; switch delivers active (802.3af/at). A generic injector/splitter (e.g. POE-48V-12W Gigabit) converts 48V→12V. Enable PoE on switch port 2 to feed the splitter.
+!!! note "LibreRouter 1 (port 2) - no PoE"
+    LibreRouter 1 is now powered via 12V DC barrel jack (Arduino relay channel 4). PoE is disabled on switch port 2.
 
 ---
 

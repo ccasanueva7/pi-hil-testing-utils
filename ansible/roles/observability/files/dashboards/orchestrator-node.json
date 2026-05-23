@@ -2306,6 +2306,242 @@
         }
       ],
       "description": "Memoria del kernel asociada a sockets TCP y UDP."
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 90 },
+      "id": 90,
+      "title": "Lab Services",
+      "type": "row",
+      "description": "Estado de los servicios críticos del testbed: labgrid-exporter, pdudaemon y ser2net."
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [{ "type": "value", "options": {
+            "0": { "text": "FAILED", "color": "red", "index": 0 },
+            "1": { "text": "ACTIVE", "color": "green", "index": 1 }
+          }}],
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "red", "value": null },
+            { "color": "green", "value": 1 }
+          ]},
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 91 },
+      "id": 91,
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "auto" },
+      "title": "labgrid-exporter",
+      "type": "stat",
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "node_systemd_unit_state{job=\"orchestrator-host\",name=\"labgrid-exporter.service\",state=\"active\"}", "refId": "A" }],
+      "description": "1 = active, 0 = failed. Requiere collector systemd en node_exporter."
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [{ "type": "value", "options": {
+            "0": { "text": "FAILED", "color": "red", "index": 0 },
+            "1": { "text": "ACTIVE", "color": "green", "index": 1 }
+          }}],
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "red", "value": null },
+            { "color": "green", "value": 1 }
+          ]},
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 91 },
+      "id": 92,
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "auto" },
+      "title": "pdudaemon",
+      "type": "stat",
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "node_systemd_unit_state{job=\"orchestrator-host\",name=\"pdudaemon.service\",state=\"active\"}", "refId": "A" }],
+      "description": "Control de relay/PDU para encendido y apagado de DUTs."
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [{ "type": "value", "options": {
+            "0": { "text": "FAILED", "color": "red", "index": 0 },
+            "1": { "text": "ACTIVE", "color": "green", "index": 1 }
+          }}],
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "red", "value": null },
+            { "color": "green", "value": 1 }
+          ]},
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 91 },
+      "id": 93,
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "auto" },
+      "title": "ser2net",
+      "type": "stat",
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "node_systemd_unit_state{job=\"orchestrator-host\",name=\"ser2net.service\",state=\"active\"}", "refId": "A" }],
+      "description": "Acceso serial a DUTs vía USB-to-serial y TCP."
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": {
+              "0": { "text": "down", "color": "red", "index": 0 },
+              "1": { "text": "up", "color": "green", "index": 1 }
+            }}
+          ],
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "red", "value": null },
+            { "color": "green", "value": 1 }
+          ]}
+        }
+      },
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 95 },
+      "id": 94,
+      "options": {
+        "mergeValues": true,
+        "rowHeight": 0.9,
+        "showValue": "auto",
+        "alignValue": "left",
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "single" }
+      },
+      "title": "Service state history",
+      "type": "state-timeline",
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "node_systemd_unit_state{job=\"orchestrator-host\",name=\"labgrid-exporter.service\",state=\"active\"}", "legendFormat": "labgrid-exporter", "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "node_systemd_unit_state{job=\"orchestrator-host\",name=\"pdudaemon.service\",state=\"active\"}", "legendFormat": "pdudaemon", "refId": "B" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "node_systemd_unit_state{job=\"orchestrator-host\",name=\"ser2net.service\",state=\"active\"}", "legendFormat": "ser2net", "refId": "C" }
+      ],
+      "description": "Historial de estado de los tres servicios; verde = active, rojo = caído."
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 101 },
+      "id": 100,
+      "title": "WireGuard (wg0)",
+      "type": "row",
+      "description": "Tráfico en la interfaz wg0 — enlace cifrado entre el runner de CI y el lab host."
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": true,
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "bps"
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 102 },
+      "id": 101,
+      "options": {
+        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "title": "WireGuard Bandwidth",
+      "type": "timeseries",
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "rate(node_network_receive_bytes_total{job=\"orchestrator-host\",device=\"wg0\"}[2m]) * 8", "legendFormat": "rx", "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "-rate(node_network_transmit_bytes_total{job=\"orchestrator-host\",device=\"wg0\"}[2m]) * 8", "legendFormat": "tx", "refId": "B" }
+      ],
+      "description": "Bits/s recibidos (positivo) y enviados (negativo) por wg0."
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": true,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "pps"
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 102 },
+      "id": 102,
+      "options": {
+        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "title": "WireGuard Packets",
+      "type": "timeseries",
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "rate(node_network_receive_packets_total{job=\"orchestrator-host\",device=\"wg0\"}[2m])", "legendFormat": "rx", "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "-rate(node_network_transmit_packets_total{job=\"orchestrator-host\",device=\"wg0\"}[2m])", "legendFormat": "tx", "refId": "B" }
+      ],
+      "description": "Paquetes/s en wg0; rx positivo, tx negativo."
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": null },
+            { "color": "red", "value": 1 }
+          ]},
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 110 },
+      "id": 103,
+      "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "center", "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "auto" },
+      "title": "wg0 Errors",
+      "type": "stat",
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "rate(node_network_receive_errs_total{job=\"orchestrator-host\",device=\"wg0\"}[5m]) + rate(node_network_transmit_errs_total{job=\"orchestrator-host\",device=\"wg0\"}[5m])", "refId": "A" }
+      ],
+      "description": "Tasa de errores RX+TX en wg0; debería ser 0."
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            { "type": "value", "options": {
+              "0": { "text": "DOWN", "color": "red", "index": 0 },
+              "1": { "text": "UP", "color": "green", "index": 1 }
+            }}
+          ],
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "red", "value": null },
+            { "color": "green", "value": 1 }
+          ]},
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 110 },
+      "id": 104,
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "auto" },
+      "title": "wg0 Link",
+      "type": "stat",
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "node_network_up{job=\"orchestrator-host\",device=\"wg0\"}", "refId": "A" }
+      ],
+      "description": "Estado operativo de la interfaz wg0 (node_network_up)."
     }
   ],
   "refresh": "30s",
@@ -2327,5 +2563,5 @@
   "timezone": "browser",
   "title": "FCEFyN Testbed - Orchestrator Host",
   "uid": "fcefyn-orchestrator-node",
-  "version": 3
+  "version": 4
 }
