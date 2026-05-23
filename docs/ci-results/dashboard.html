@@ -62,13 +62,16 @@
     header .meta { font-size: 12px; opacity: .75; text-align: right; }
     header a { color: #ffd54f; text-decoration: none; }
     header a:hover { text-decoration: underline; }
-    .theme-toggle {
+    .theme-toggle, .refresh-btn {
       background: none; border: 1px solid rgba(255,255,255,.3);
       border-radius: 6px; padding: 4px 8px; cursor: pointer;
       color: var(--text-on-primary); font-size: 16px; line-height: 1;
       transition: background .15s;
     }
-    .theme-toggle:hover { background: rgba(255,255,255,.15); }
+    .theme-toggle:hover, .refresh-btn:hover { background: rgba(255,255,255,.15); }
+    .refresh-btn { font-size: 13px; display: flex; align-items: center; gap: 5px; }
+    .refresh-btn svg { transition: transform .5s; }
+    .refresh-btn.spinning svg { transform: rotate(360deg); }
 
     main { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
 
@@ -241,6 +244,13 @@
       <div id="last-update">Loading…</div>
       <div><a href="https://github.com/fcefyn-testbed/lime-packages/actions/workflows/build-firmware.yml" target="_blank">View CI runs ↗</a></div>
     </div>
+    <button class="refresh-btn" id="refresh-btn" title="Refresh dashboard (R)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+      </svg>
+      Refresh
+    </button>
     <button class="theme-toggle" id="theme-toggle" title="Toggle dark mode">🌙</button>
   </div>
 </header>
@@ -613,6 +623,19 @@
   }
 
   loadDashboard();
+
+  document.getElementById('refresh-btn').addEventListener('click', () => {
+    const btn = document.getElementById('refresh-btn');
+    btn.classList.add('spinning');
+    btn.disabled = true;
+    // Reset release filter options before reload
+    const sel = document.getElementById('release-filter');
+    while (sel.options.length > 1) sel.remove(1);
+    loadDashboard().finally(() => {
+      btn.classList.remove('spinning');
+      btn.disabled = false;
+    });
+  });
 })();
 </script>
 </body>
