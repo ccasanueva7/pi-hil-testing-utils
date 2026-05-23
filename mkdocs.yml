@@ -97,6 +97,10 @@ nav:
           - Switch: configuracion/switch-config.md
           - Gateway: configuracion/gateway.md
           - DUTs: configuracion/duts-config.md
+          - Devices:
+              - Belkin RT3200: configuracion/device-belkin-rt3200.md
+              - BPi-R4: configuracion/device-bpi-r4.md
+              - OpenWrt One: configuracion/device-openwrt-one.md
       - Services and automation:
           - Arduino relay: configuracion/arduino-relay.md
           - TFTP / dnsmasq: configuracion/tftp-server.md
