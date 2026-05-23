@@ -111,4 +111,11 @@ nav:
       - openwrt-tests onboarding: diseno/openwrt-tests-onboarding.md
       - openwrt-tests CI flow: diseno/openwrt-tests-ci-flow.md
       - Virtual mesh: diseno/virtual-mesh.md
+  - CI Test Dashboard:
+      - Overview: ci-results/index.md
+      - Architecture: ci-results/architecture.md
+      - Device registry: ci-results/devices.md
+      - Publishing results: ci-results/publishing.md
+      - Usage guide: ci-results/usage.md
+      - Maintenance: ci-results/maintenance.md
   - Demos: demos.md
