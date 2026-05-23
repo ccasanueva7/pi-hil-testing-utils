@@ -501,7 +501,10 @@
           ${detailHtml}
           <div class="card-meta">
             <span>${latestTime}${dur ? ' · ' + dur : ''}</span>
-            ${latest ? `<a href="${latest.html_url}" target="_blank">View run ↗</a>` : ''}
+            <span style="display:flex;gap:10px;align-items:center">
+              ${PAGES_BASE && resultsPath(entry) ? `<a href="${PAGES_BASE}${resultsPath(entry)}" target="_blank">Report ↗</a>` : ''}
+              ${latest ? `<a href="${latest.html_url}" target="_blank">CI run ↗</a>` : ''}
+            </span>
           </div>
         </div>
       </div>`;
