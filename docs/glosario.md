@@ -4,6 +4,9 @@ Key terms used across the FCEFyN testbed documentation.
 
 ---
 
+**auto-merge**
+: A GitHub Pull Request setting that merges the PR automatically as soon as all required reviews and status checks pass. The CI results pipeline relies on it so the bot PR opened by `collect-lime-results.yml` lands on `develop` without manual intervention. Requires the repo-level "Allow auto-merge" toggle to be on.
+
 **batman-adv**
 : B.A.T.M.A.N. Advanced — a mesh routing protocol implemented as a Linux kernel module. Operates at Layer 2, handling frame forwarding between mesh nodes. Used by LibreMesh for L2 mesh connectivity.
 
