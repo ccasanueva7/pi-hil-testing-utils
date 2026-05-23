@@ -673,6 +673,13 @@
 
   loadDashboard();
 
+  document.addEventListener('keydown', e => {
+    if (e.key === 'r' || e.key === 'R') {
+      if (document.activeElement.tagName === 'INPUT') return;
+      document.getElementById('refresh-btn').click();
+    }
+  });
+
   document.getElementById('refresh-btn').addEventListener('click', () => {
     const btn = document.getElementById('refresh-btn');
     btn.classList.add('spinning');
