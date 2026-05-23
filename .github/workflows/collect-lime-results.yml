@@ -1,0 +1,131 @@
+name: Collect lime-packages test results
+
+# Pulls test artifacts from fcefyn-testbed/lime-packages CI and commits
+# the report.xml files to docs/ci-results/results/ so the dashboard can
+# serve them without any changes needed inside lime-packages.
+#
+# Requires secret: LIME_PACKAGES_TOKEN — a PAT with actions:read scope on
+# fcefyn-testbed/lime-packages. The same PAT used as TESTBED_UTILS_TOKEN
+# in lime-packages works here (it already has org-wide read access).
+
+on:
+  schedule:
+    # Every 6 hours — keeps results reasonably fresh without hammering the API.
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      max_runs:
+        description: "Number of recent lime-packages CI runs to scan (default: 5)"
+        required: false
+        default: "5"
+
+permissions:
+  contents: write
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout develop branch
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download lime-packages test results
+        env:
+          GH_TOKEN: ${{ secrets.LIME_PACKAGES_TOKEN }}
+          MAX_RUNS: ${{ github.event.inputs.max_runs || '5' }}
+        run: |
+          set -euo pipefail
+          REPO="fcefyn-testbed/lime-packages"
+          WORKFLOW="build-firmware.yml"
+
+          echo "Scanning last $MAX_RUNS completed runs of $WORKFLOW in $REPO …"
+
+          run_ids=$(gh api \
+            "repos/$REPO/actions/workflows/$WORKFLOW/runs?status=completed&per_page=$MAX_RUNS" \
+            --jq '.workflow_runs[].id')
+
+          changed=false
+
+          for run_id in $run_ids; do
+            echo "Run $run_id …"
+
+            artifacts=$(gh api "repos/$REPO/actions/runs/$run_id/artifacts?per_page=100" \
+              --jq '.artifacts[] | select(.name | startswith("test-results-")) | "\(.id)|\(.name)"')
+
+            [[ -z "$artifacts" ]] && continue
+
+            while IFS= read -r entry; do
+              [[ -z "$entry" ]] && continue
+              artifact_id="${entry%%|*}"
+              name="${entry#*|}"
+
+              # Determine destination path from artifact name convention:
+              #   test-results-qemu-single-{device}-{release}
+              #   test-results-qemu-mesh-{device}-{release}
+              #   test-results-mesh-pairs-{pair}-{release}
+              #   test-results-mesh-{release}
+              #   test-results-unit
+              #   test-results-{place}-{release}   (physical)
+              if   [[ "$name" == test-results-qemu-single-* ]]; then
+                suffix="${name#test-results-qemu-single-}"
+                dest="docs/ci-results/results/qemu-single/$suffix"
+              elif [[ "$name" == test-results-qemu-mesh-* ]]; then
+                suffix="${name#test-results-qemu-mesh-}"
+                dest="docs/ci-results/results/qemu-mesh/$suffix"
+              elif [[ "$name" == test-results-mesh-pairs-* ]]; then
+                suffix="${name#test-results-mesh-pairs-}"
+                dest="docs/ci-results/results/mesh-pairs/$suffix"
+              elif [[ "$name" == test-results-mesh-* ]]; then
+                suffix="${name#test-results-mesh-}"
+                dest="docs/ci-results/results/mesh/$suffix"
+              elif [[ "$name" == "test-results-unit" ]]; then
+                dest="docs/ci-results/results/unit"
+              else
+                suffix="${name#test-results-}"
+                dest="docs/ci-results/results/physical/$suffix"
+              fi
+
+              # Skip if we already have this report (idempotent).
+              if [[ -f "$dest/report.xml" ]]; then
+                echo "  $name — already collected, skipping"
+                continue
+              fi
+
+              echo "  Downloading $name (artifact $artifact_id) → $dest"
+              mkdir -p "$dest"
+
+              if gh api \
+                  --method GET \
+                  "repos/$REPO/actions/artifacts/$artifact_id/zip" \
+                  > /tmp/artifact.zip 2>/dev/null; then
+                # report.xml may be at the root or inside a subdirectory.
+                if unzip -p /tmp/artifact.zip report.xml > "$dest/report.xml" 2>/dev/null || \
+                   unzip -p /tmp/artifact.zip '*/report.xml' > "$dest/report.xml" 2>/dev/null; then
+                  echo "  → saved $dest/report.xml"
+                  changed=true
+                else
+                  echo "  ⚠ No report.xml found in artifact $name"
+                  rm -f "$dest/report.xml"
+                fi
+              else
+                echo "  ⚠ Could not download artifact $name (expired or access denied)"
+              fi
+              rm -f /tmp/artifact.zip
+
+            done <<< "$artifacts"
+          done
+
+          if [[ "$changed" == "true" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add docs/ci-results/results/
+            git diff --staged --quiet && echo "Nothing to commit." && exit 0
+            git commit -m "ci: collect lime-packages test results"
+            git push
+          else
+            echo "No new results — nothing to commit."
+          fi
