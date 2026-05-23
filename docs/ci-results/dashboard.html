@@ -123,9 +123,14 @@
     .device-card {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--radius); box-shadow: var(--shadow);
-      overflow: hidden; transition: box-shadow .15s;
+      overflow: hidden;
+      transition: box-shadow .2s ease, transform .2s ease, border-color .2s ease;
     }
-    .device-card:hover { box-shadow: var(--shadow-md); }
+    .device-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+      border-color: var(--primary-light);
+    }
 
     .card-header {
       display: flex; align-items: flex-start; justify-content: space-between;
