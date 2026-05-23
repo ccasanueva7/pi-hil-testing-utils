@@ -329,6 +329,7 @@
         </svg>
         <input type="text" id="search" placeholder="Search device or place…" />
       </div>
+      <button id="toggle-all-btn" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;color:var(--text-muted)" title="Expand or collapse all test cases">Expand all</button>
     </div>
   </div>
 
@@ -710,6 +711,14 @@
   }
 
   loadDashboard();
+
+  let allExpanded = false;
+  document.getElementById('toggle-all-btn').addEventListener('click', () => {
+    allExpanded = !allExpanded;
+    document.querySelectorAll('.test-cases').forEach(el => el.classList.toggle('open', allExpanded));
+    document.querySelectorAll('.expand-btn').forEach(btn => btn.classList.toggle('open', allExpanded));
+    document.getElementById('toggle-all-btn').textContent = allExpanded ? 'Collapse all' : 'Expand all';
+  });
 
   document.addEventListener('keydown', e => {
     if (e.key === 'r' || e.key === 'R') {
