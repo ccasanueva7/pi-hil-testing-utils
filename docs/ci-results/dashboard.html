@@ -421,8 +421,10 @@
 
     const dots = entry.runs.slice(0, 10).map(r => {
       const s = statusOf(r.conclusion);
-      const t = new Date(r.started_at).toLocaleString();
-      return `<div class="run-dot ${s}" title="${t} — ${s}" onclick="window.open('${r.html_url}','_blank')"></div>`;
+      const t = new Date(r.started_at).toLocaleString(undefined, { dateStyle:'short', timeStyle:'short' });
+      const dur = r.duration_s ? ` · ${Math.floor(r.duration_s/60)}m${r.duration_s%60}s` : '';
+      const label = { pass:'✓ Pass', fail:'✗ Fail', skip:'– Skip', unknown:'?' }[s] || s;
+      return `<div class="run-dot ${s}" title="${t}${dur} — ${label}" onclick="window.open('${r.html_url}','_blank')"></div>`;
     }).join('');
 
     const latestTime = latest
