@@ -57,7 +57,7 @@ Artifacts: `bin/targets/<target>/<subtarget>/`.
 
 ## 2. LibreMesh (lime-packages)
 
-Use for **community mesh** images: add the LibreMesh feeds and select `lime-*` packages (as required by the test suite or [libremesh-tests](https://github.com/francoriba/libremesh-tests)).
+Use for **community mesh** images: add the LibreMesh feeds and select `lime-*` packages (as required by the test suite or [libremesh-tests](https://github.com/fcefyn-testbed/libremesh-tests)).
 
 **1. Clone OpenWrt and enter build root**
 
@@ -179,3 +179,16 @@ Upstream: [libremesh.org development](https://libremesh.org/development.html).
    ```
 
 Firmware appears under `bin/` as in standard OpenWrt.
+
+---
+
+## Automatic builds via PR (lime-packages fork)
+
+The **fcefyn-testbed/lime-packages** fork includes `.github/workflows/build-firmware.yml`: on pull requests (and manual dispatch), GitHub Actions builds a **local lime_packages feed** with the OpenWrt SDK, then one **firmware image per row** in `.github/ci/targets.yml` using ImageBuilder. Successful runs upload **`firmware-<device>.*`** and **`lime-feed-<arch>`** artifacts.
+
+For architecture, caching, and feed indexing details, see:
+
+- [lime-packages CI: firmware build](../diseno/lime-packages-ci-flow.md)
+- [lime-packages CI: hardware tests](../diseno/lime-packages-test-flow.md) (downstream **libremesh-tests** on the `testbed-fcefyn` self-hosted runner)
+
+Manual procedures above still apply when you build outside CI or need a custom `menuconfig` / full Buildroot tree.
