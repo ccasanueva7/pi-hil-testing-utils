@@ -623,7 +623,14 @@
     const grid = document.getElementById('device-grid');
 
     const runsData = await ghFetch(`/repos/${REPO}/actions/workflows/${WF}/runs?per_page=${RUNS}`);
-    if (!runsData || !runsData.workflow_runs.length) {
+    if (!runsData) {
+      grid.innerHTML = `<div class="empty-state">
+        <p style="font-size:16px;margin-bottom:8px">⚠ Could not reach the GitHub API</p>
+        <p style="font-size:13px">Rate limit or network error. <button onclick="document.getElementById('refresh-btn').click()" style="color:var(--accent);background:none;border:none;cursor:pointer;font-size:13px;text-decoration:underline">Try again</button></p>
+      </div>`;
+      return;
+    }
+    if (!runsData.workflow_runs.length) {
       grid.innerHTML = `<div class="empty-state"><p>No workflow runs found.</p></div>`;
       return;
     }
