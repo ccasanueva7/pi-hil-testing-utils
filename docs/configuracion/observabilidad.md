@@ -112,6 +112,8 @@ Three dashboards:
 | Network - Physical | Bandwidth (bps), Packets/s, Errors & Drops, TCP Connections |
 | Network - VLANs | Bandwidth and packets for vlan100-108, vlan200 (collapsible) |
 | System Internals | File Descriptors, Entropy, Sockets by Protocol, Systemd Units (active/failed), Socket Memory |
+| Lab Services | Active/inactive stats for `labgrid-exporter.service`, `pdudaemon.service`, `ser2net.service` plus a state-timeline showing transitions over the selected range. Source: `node_systemd_unit_state{job="orchestrator-host",name=…,state="active"}`. |
+| WireGuard (wg0) | Tunnel bandwidth (rx positive, tx negative), packet rate, error rate, and a UP/DOWN pill from `node_network_up{device="wg0"}`. Same metrics any other ethernet device reports, just filtered to the tunnel. |
 
 For **orchestration host only** metrics, always use **Orchestrator Host**; the DUT dashboard excludes it on purpose from the **device** dropdown.
 
