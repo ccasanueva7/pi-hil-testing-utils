@@ -49,6 +49,9 @@ Key terms used across the FCEFyN testbed documentation.
 **pdudaemon**
 : A daemon that controls power to DUTs via relay boards or PDUs. Exposes an HTTP API. The lab uses an Arduino + SSR relay board controlled by pdudaemon.
 
+**PAT (Personal Access Token)**
+: A GitHub credential scoped per user. The CI results pipeline uses two fine-grained PATs as repository secrets in `fcefyn_testbed_utils`: `LIME_PACKAGES_TOKEN` (Actions: Read on `lime-packages`, for downloading artifacts) and `BOT_PR_TOKEN` (Contents + Pull Requests: Write on this repo, for opening the auto-merged bot PR).
+
 **place**
 : A Labgrid concept representing one testable resource (a DUT with all its attached resources). A place has a name (e.g. `labgrid-fcefyn-belkin_rt3200_1`) and is registered with the coordinator.
 
