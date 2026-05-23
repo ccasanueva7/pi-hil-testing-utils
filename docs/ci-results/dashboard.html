@@ -338,6 +338,9 @@
   const WF           = 'build-firmware.yml';
   const RUNS         = 10;
   const RESULTS_BASE = 'results/';   // served alongside this page
+  // Base URL of the GitHub Pages site where test reports are published.
+  // Set to empty string to disable direct report links.
+  const PAGES_BASE   = 'https://fcefyn-testbed.github.io/lime-packages/ci-results/results/';
 
   // ── GitHub API (no auth, public repo) ─────────────────────────────────────
   async function ghFetch(path) {
