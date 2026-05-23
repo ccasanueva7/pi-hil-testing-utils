@@ -303,6 +303,7 @@
     <div class="stat-card pass"> <div class="value" id="stat-pass">—</div> <div class="label">Passing</div></div>
     <div class="stat-card fail"> <div class="value" id="stat-fail">—</div> <div class="label">Failing</div></div>
     <div class="stat-card skip"> <div class="value" id="stat-skip">—</div> <div class="label">Skipped</div></div>
+    <div class="stat-card"><div class="value" id="stat-pass-rate" style="font-size:20px;color:var(--primary)">—</div><div class="label">Pass rate</div></div>
     <div class="stat-card"><div class="value" id="stat-unknown" style="color:var(--unknown)">—</div><div class="label">No data</div></div>
     <div class="stat-card"><div class="value" id="stat-avg-dur" style="font-size:20px">—</div><div class="label">Avg duration</div></div>
     <div class="stat-card"><div class="value" id="stat-tests" style="font-size:20px">—</div><div class="label">Test cases</div></div>
@@ -609,6 +610,8 @@
     document.getElementById('stat-fail').textContent    = fail;
     document.getElementById('stat-skip').textContent    = skip;
     document.getElementById('stat-unknown').textContent = unknown;
+    const known = pass + fail + skip;
+    if (known > 0) document.getElementById('stat-pass-rate').textContent = Math.round(pass/known*100) + '%';
     if (durations.length) {
       const avg = Math.round(durations.reduce((a,b) => a+b, 0) / durations.length);
       document.getElementById('stat-avg-dur').textContent =
