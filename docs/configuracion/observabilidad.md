@@ -100,6 +100,19 @@ Three dashboards:
 | Wi-Fi | `wifi_network_*` (AP), `wifi_stations` / `wifi_station_signal_dbm` (stations, if opkg packages present) |
 | Labels | Table of scrape labels (`firmware`, `target`, etc.) from `up{dut="$device"}` |
 
+### Lab Overview dashboard sections
+
+This dashboard has no `device` variable — every panel iterates over all DUTs at once using `dut=~".+"`. Useful for a quick glance at the whole fleet.
+
+| Section | Panels |
+|---------|--------|
+| Device health at a glance | `up{dut=~".+"}` rendered as one stat-card per device with UP/DOWN value mapping |
+| Uptime | `node_time_seconds - node_boot_time_seconds`, color-thresholded green→yellow→orange |
+| CPU | `100 - avg(rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100` per DUT |
+| Memory | `100 - MemAvailable / MemTotal * 100` per DUT |
+| Device table | One row per DUT consolidating scrape status, uptime, CPU %, RAM % via `merge` + `organize` transformations |
+| Firmware & target | Instant table of `node_openwrt_info{dut=~".+"}` with labels-to-fields, surfacing the `firmware` and `target` labels set in the scrape config |
+
 ### Orchestrator Host dashboard sections
 
 | Section | Panels |
