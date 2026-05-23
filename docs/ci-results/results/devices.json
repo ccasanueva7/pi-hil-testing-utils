@@ -63,6 +63,24 @@
       "release": "25.12.2",
       "type": "qemu-mesh",
       "results_path": "qemu-mesh/qemu_x86_64-25.12.2/report.xml"
+    },
+    {
+      "id": "physical-bpi_r4_1-24.10.6",
+      "device": "bananapi_bpi-r4",
+      "display_name": "BPi-R4 #1",
+      "place": "bpi_r4_1",
+      "release": "24.10.6",
+      "type": "physical",
+      "results_path": "physical/bpi_r4_1-24.10.6/report.xml"
+    },
+    {
+      "id": "physical-bpi_r4_2-24.10.6",
+      "device": "bananapi_bpi-r4",
+      "display_name": "BPi-R4 #2",
+      "place": "bpi_r4_2",
+      "release": "24.10.6",
+      "type": "physical",
+      "results_path": "physical/bpi_r4_2-24.10.6/report.xml"
     }
   ]
 }
