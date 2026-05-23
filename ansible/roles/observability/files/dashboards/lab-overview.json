@@ -47,7 +47,7 @@
       "title": "Scrape up — all devices",
       "type": "stat",
       "targets": [
-        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "up{job=~\"dut|gateway\"}", "legendFormat": "{{dut}}", "refId": "A" }
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "up{dut=~\".+\"}", "legendFormat": "{{dut}}", "refId": "A" }
       ],
       "description": "Verde = Prometheus puede scrapear el dispositivo. Rojo = sin datos (apagado, sin red o node_exporter caído)."
     },
@@ -84,7 +84,7 @@
       "title": "Uptime per device",
       "type": "stat",
       "targets": [
-        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "node_time_seconds{job=~\"dut|gateway\"} - node_boot_time_seconds{job=~\"dut|gateway\"}", "legendFormat": "{{dut}}", "refId": "A" }
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "node_time_seconds{dut=~\".+\"} - node_boot_time_seconds{dut=~\".+\"}", "legendFormat": "{{dut}}", "refId": "A" }
       ],
       "description": "Tiempo desde el último arranque. Verde = recién encendido; naranja = lleva más de 24 h."
     },
@@ -123,7 +123,7 @@
       "title": "CPU busy per device",
       "type": "stat",
       "targets": [
-        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "100 - (avg by (dut) (rate(node_cpu_seconds_total{job=~\"dut|gateway\",mode=\"idle\"}[2m])) * 100)", "legendFormat": "{{dut}}", "refId": "A" }
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "100 - (avg by (dut) (rate(node_cpu_seconds_total{dut=~\".+\",mode=\"idle\"}[2m])) * 100)", "legendFormat": "{{dut}}", "refId": "A" }
       ],
       "description": "Porcentaje de CPU en uso (100 - idle rate 2m)."
     },
@@ -162,7 +162,7 @@
       "title": "RAM used per device",
       "type": "stat",
       "targets": [
-        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "100 - (node_memory_MemAvailable_bytes{job=~\"dut|gateway\"} / node_memory_MemTotal_bytes{job=~\"dut|gateway\"} * 100)", "legendFormat": "{{dut}}", "refId": "A" }
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "100 - (node_memory_MemAvailable_bytes{dut=~\".+\"} / node_memory_MemTotal_bytes{dut=~\".+\"} * 100)", "legendFormat": "{{dut}}", "refId": "A" }
       ],
       "description": "Porcentaje de RAM no disponible (100 - MemAvailable/MemTotal)."
     },
@@ -219,10 +219,10 @@
       ],
       "type": "table",
       "targets": [
-        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "up{job=~\"dut|gateway\"}", "legendFormat": "{{dut}}", "refId": "A", "instant": true, "format": "table" },
-        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "node_time_seconds{job=~\"dut|gateway\"} - node_boot_time_seconds{job=~\"dut|gateway\"}", "legendFormat": "{{dut}}", "refId": "B", "instant": true, "format": "table" },
-        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "100 - (avg by (dut) (rate(node_cpu_seconds_total{job=~\"dut|gateway\",mode=\"idle\"}[2m])) * 100)", "legendFormat": "{{dut}}", "refId": "C", "instant": true, "format": "table" },
-        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "100 - (node_memory_MemAvailable_bytes{job=~\"dut|gateway\"} / node_memory_MemTotal_bytes{job=~\"dut|gateway\"} * 100)", "legendFormat": "{{dut}}", "refId": "D", "instant": true, "format": "table" }
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "up{dut=~\".+\"}", "legendFormat": "{{dut}}", "refId": "A", "instant": true, "format": "table" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "node_time_seconds{dut=~\".+\"} - node_boot_time_seconds{dut=~\".+\"}", "legendFormat": "{{dut}}", "refId": "B", "instant": true, "format": "table" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "100 - (avg by (dut) (rate(node_cpu_seconds_total{dut=~\".+\",mode=\"idle\"}[2m])) * 100)", "legendFormat": "{{dut}}", "refId": "C", "instant": true, "format": "table" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "100 - (node_memory_MemAvailable_bytes{dut=~\".+\"} / node_memory_MemTotal_bytes{dut=~\".+\"} * 100)", "legendFormat": "{{dut}}", "refId": "D", "instant": true, "format": "table" }
       ],
       "description": "Vista consolidada: un DUT por fila con scrape up, uptime, CPU% y RAM%."
     }
