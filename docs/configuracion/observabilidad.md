@@ -78,12 +78,13 @@ VPS, Certbot, and tunnel unit: [grafana-public-access.md](grafana-public-access.
 
 ## Grafana dashboards
 
-Two dashboards:
+Three dashboards:
 
 | Dashboard | Source | Description |
 |-----------|--------|---------------|
+| **FCEFyN Testbed - Lab Overview** | Provisioned (JSON in repo) | Lab-wide view: every DUT and the gateway at a glance. Single-row stat panels (scrape `up`, uptime, CPU %, RAM %) plus a consolidated table and a firmware/target table. Uses `dut=~".+"` selectors so the whole fleet renders without picking a device. |
 | **FCEFyN Testbed - DUTs & gateway** | Provisioned (JSON in repo) | DUTs + WDR3500 gateway. **device** variable with `label_values(up{dut!="lab-orchestrator"}, dut)`: **does not** include the orchestration host. All queries use `dut="$device"` and datasource `uid: prometheus`. |
-| **FCEFyN Testbed - Orchestrator Host** | Provisioned (JSON in repo) | Orchestration host (~30 panels). Job `orchestrator-host`, label `dut=lab-orchestrator`. |
+| **FCEFyN Testbed - Orchestrator Host** | Provisioned (JSON in repo) | Orchestration host (~40 panels). Job `orchestrator-host`, label `dut=lab-orchestrator`. |
 
 ### DUTs & gateway dashboard sections
 
