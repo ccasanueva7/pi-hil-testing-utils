@@ -62,6 +62,13 @@
     header .meta { font-size: 12px; opacity: .75; text-align: right; }
     header a { color: #ffd54f; text-decoration: none; }
     header a:hover { text-decoration: underline; }
+    .theme-toggle {
+      background: none; border: 1px solid rgba(255,255,255,.3);
+      border-radius: 6px; padding: 4px 8px; cursor: pointer;
+      color: var(--text-on-primary); font-size: 16px; line-height: 1;
+      transition: background .15s;
+    }
+    .theme-toggle:hover { background: rgba(255,255,255,.15); }
 
     main { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
 
@@ -229,9 +236,12 @@
     </svg>
     LibreMesh CI Test Dashboard
   </div>
-  <div class="meta">
-    <div id="last-update">Loading…</div>
-    <div><a href="https://github.com/fcefyn-testbed/lime-packages/actions/workflows/build-firmware.yml" target="_blank">View CI runs ↗</a></div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="meta">
+      <div id="last-update">Loading…</div>
+      <div><a href="https://github.com/fcefyn-testbed/lime-packages/actions/workflows/build-firmware.yml" target="_blank">View CI runs ↗</a></div>
+    </div>
+    <button class="theme-toggle" id="theme-toggle" title="Toggle dark mode">🌙</button>
   </div>
 </header>
 
