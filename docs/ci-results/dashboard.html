@@ -669,7 +669,7 @@
     // Also load devices.json to include entries not visible in the GitHub API
     // (e.g. unit tests from tests.yml which is a separate workflow)
     try {
-      const devData = await fetch(RESULTS_BASE + 'devices.json');
+      const devData = await fetch(RESULTS_BASE + 'devices.json?v=' + Date.now(), { cache: 'no-store' });
       if (devData.ok) {
         const { devices } = await devData.json();
         for (const d of devices) {
