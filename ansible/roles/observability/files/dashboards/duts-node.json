@@ -306,10 +306,32 @@
         { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "-rate(node_network_transmit_packets_total{dut=\"$device\",device!=\"lo\"}[2m])", "legendFormat": "tx {{device}}", "refId": "B" }
       ]
     },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "line", "fillOpacity": 5, "lineInterpolation": "smooth", "lineWidth": 1, "showPoints": "never", "spanNulls": true },
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 41 },
+      "id": 43,
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "title": "Network errors & drops",
+      "type": "timeseries",
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "rate(node_network_receive_errs_total{dut=\"$device\",device!=\"lo\"}[2m])", "legendFormat": "rx err {{device}}", "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "rate(node_network_transmit_errs_total{dut=\"$device\",device!=\"lo\"}[2m])", "legendFormat": "tx err {{device}}", "refId": "B" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "rate(node_network_receive_drop_total{dut=\"$device\",device!=\"lo\"}[2m])", "legendFormat": "rx drop {{device}}", "refId": "C" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "rate(node_network_transmit_drop_total{dut=\"$device\",device!=\"lo\"}[2m])", "legendFormat": "tx drop {{device}}", "refId": "D" }
+      ],
+      "description": "Tasa de errores y drops RX/TX por interfaz; debería ser 0 en condiciones normales."
+    },
 
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 41 },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 49 },
       "id": 50,
       "title": "Disk / filesystem",
       "type": "row"
