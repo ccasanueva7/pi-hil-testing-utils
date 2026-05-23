@@ -260,14 +260,15 @@ manages GitHub issues for failing devices:
 | Test passes, issue open | Comments "passed" and closes the issue. |
 
 Each issue body contains a metadata table (place, device, release, run
-link, date) and the full output of `lime-report.sh -m` (markdown
-mode, see [PR #1242](https://github.com/libremesh/lime-packages/pull/1242))
-inside a collapsible `<details>` block.
+link, date) and the output of `lime-report.sh` (sections with `### FILE`
+/ `### CMD` headers) inside a collapsible `<details>` block. Upstream
+[PR #1242](https://github.com/libremesh/lime-packages/pull/1242) adds a
+`-m` flag; this fork invokes the script without flags until that lands.
 
 `lime-report` is collected from the DUT **before** poweroff/unlock via
-`labgrid-client ssh -- lime-report.sh -m`. If the device is
-unreachable or the command does not exist yet, a fallback message is
-stored instead.
+`labgrid-client ssh -- lime-report.sh` with `LG_PROXY` and `LG_ENV` set.
+If SSH fails or the command is missing, a fallback message plus
+`labgrid-client` stderr is stored instead.
 
 This only triggers on `schedule` so that PRs and manual dispatches do
 not create noise in the issue tracker.
