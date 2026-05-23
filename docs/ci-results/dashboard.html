@@ -675,6 +675,11 @@
         for (const d of devices) {
           if (!byId.has(d.id)) {
             byId.set(d.id, { ...d, displayName: d.display_name || d.id, runs: [], _report: null });
+          } else if (d.display_name) {
+            // Enrich API-derived entry with friendly name and results path from registry
+            const e = byId.get(d.id);
+            e.displayName = d.display_name;
+            if (d.results_path) e.results_path = d.results_path;
           }
         }
       }
