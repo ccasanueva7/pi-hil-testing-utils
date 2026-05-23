@@ -302,3 +302,4 @@ Paths are relative to the repository root.
 | `ansible/roles/observability/templates/grafana-dashboards-provider.yml.j2` | File-based dashboard provider in Grafana |
 | `ansible/roles/observability/files/dashboards/orchestrator-node.json` | Orchestrator host dashboard JSON |
 | `ansible/roles/observability/files/dashboards/duts-node.json` | DUTs + gateway dashboard JSON (variable excludes `lab-orchestrator`) |
+| `ansible/roles/observability/files/dashboards/lab-overview.json` | Lab-wide overview dashboard JSON (every DUT in one screen) |
