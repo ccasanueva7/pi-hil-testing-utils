@@ -82,6 +82,12 @@
       border: none; outline: none; font-size: 13px;
       background: transparent; width: 180px; color: var(--text);
     }
+    .release-select {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 5px 10px; font-size: 13px;
+      color: var(--text); cursor: pointer; outline: none;
+    }
+    .release-select:focus { border-color: var(--primary-light); }
 
     .device-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
 
@@ -105,6 +111,8 @@
       letter-spacing: .5px; padding: 1px 6px; border-radius: 3px; flex-shrink: 0;
     }
     .type-badge.physical    { background: #dbeafe; color: #1d4ed8; }
+    .type-badge.mesh        { background: #d1fae5; color: #065f46; }
+    .type-badge.mesh-pair   { background: #fef9c3; color: #854d0e; }
     .type-badge.qemu-single { background: #f3e8ff; color: #7c3aed; }
     .type-badge.qemu-mesh   { background: #fce7f3; color: #be185d; }
 
@@ -220,14 +228,21 @@
     <div class="filter-tabs">
       <button class="filter-tab active" data-filter="all">All</button>
       <button class="filter-tab" data-filter="physical">Physical</button>
+      <button class="filter-tab" data-filter="mesh">Mesh</button>
+      <button class="filter-tab" data-filter="mesh-pair">Mesh pairs</button>
       <button class="filter-tab" data-filter="qemu-single">QEMU single</button>
       <button class="filter-tab" data-filter="qemu-mesh">QEMU mesh</button>
     </div>
-    <div class="search-box">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-      </svg>
-      <input type="text" id="search" placeholder="Search device or place…" />
+    <div style="display:flex;align-items:center;gap:8px">
+      <select id="release-filter" class="release-select">
+        <option value="">All releases</option>
+      </select>
+      <div class="search-box">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <input type="text" id="search" placeholder="Search device or place…" />
+      </div>
     </div>
   </div>
 
@@ -297,6 +312,10 @@
     if (qs) return { id: `qemu-single-${qs[1].trim()}-${qs[2].trim()}`, displayName: `QEMU single · ${qs[1].trim()}`, device: qs[1].trim(), release: qs[2].trim(), type: 'qemu-single' };
     const qm = name.match(/^test-mesh-qemu\s+\(([^/]+?)\s*\/\s*([^)]+)\)$/);
     if (qm) return { id: `qemu-mesh-${qm[1].trim()}-${qm[2].trim()}`, displayName: `QEMU mesh · ${qm[1].trim()}`, device: qm[1].trim(), release: qm[2].trim(), type: 'qemu-mesh' };
+    const pm = name.match(/^test-mesh\s+\(N=([^/]+?)\s*\/\s*([^)]+)\)$/);
+    if (pm) return { id: `physical-mesh-${pm[2].trim()}`, displayName: `Physical mesh (N=${pm[1].trim()})`, release: pm[2].trim(), type: 'mesh' };
+    const pp = name.match(/^test-mesh-pairs\s+\(#(\d+)\s+([^/]+?)\+([^/]+?)\s*\/\s*([^)]+)\)$/);
+    if (pp) return { id: `mesh-pair-${pp[1].trim()}-${pp[4].trim()}`, displayName: `Mesh pair #${pp[1].trim()} · ${pp[2].trim()}+${pp[3].trim()}`, release: pp[4].trim(), type: 'mesh-pair' };
     return null;
   }
 
@@ -372,7 +391,7 @@
     }
 
     return `
-      <div class="device-card" data-type="${entry.type}" data-name="${entry.id} ${entry.displayName}">
+      <div class="device-card" data-type="${entry.type}" data-name="${entry.id} ${entry.displayName}" data-release="${entry.release||''}">
         <div class="card-header">
           <div class="info">
             <div class="card-title">${esc(entry.displayName)}</div>
@@ -410,12 +429,25 @@
 
   // ── Filter + search ────────────────────────────────────────────────────────
   let currentFilter = 'all';
+  let currentRelease = '';
+
+  function populateReleaseFilter(entries) {
+    const releases = [...new Set(entries.map(e => e.release).filter(Boolean))].sort();
+    const sel = document.getElementById('release-filter');
+    releases.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r; opt.textContent = `OpenWrt ${r}`;
+      sel.appendChild(opt);
+    });
+  }
+
   function applyFilter() {
     const term = document.getElementById('search').value.toLowerCase();
     const grid = document.getElementById('device-grid');
     let visible = 0;
     for (const card of grid.querySelectorAll('.device-card')) {
       const show = (currentFilter === 'all' || card.dataset.type === currentFilter)
+                && (!currentRelease || card.dataset.release === currentRelease)
                 && (!term || card.dataset.name.toLowerCase().includes(term));
       card.style.display = show ? '' : 'none';
       if (show) visible++;
@@ -434,6 +466,10 @@
     });
   });
   document.getElementById('search').addEventListener('input', applyFilter);
+  document.getElementById('release-filter').addEventListener('change', e => {
+    currentRelease = e.target.value;
+    applyFilter();
+  });
 
   function updateStats(entries) {
     let pass=0, fail=0, skip=0;
@@ -503,7 +539,7 @@
       return;
     }
 
-    const order = ['physical', 'qemu-single', 'qemu-mesh'];
+    const order = ['physical', 'mesh', 'mesh-pair', 'qemu-single', 'qemu-mesh'];
     const entries = Array.from(byId.values()).sort((a,b) => {
       const d = order.indexOf(a.type) - order.indexOf(b.type);
       return d !== 0 ? d : a.id.localeCompare(b.id);
@@ -511,6 +547,7 @@
 
     // Render immediately with API data
     grid.innerHTML = entries.map(renderCard).join('');
+    populateReleaseFilter(entries);
     updateStats(entries);
     applyFilter();
 
