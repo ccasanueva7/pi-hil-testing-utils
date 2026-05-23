@@ -287,6 +287,13 @@ not create noise in the issue tracker.
 5. For QEMU jobs, the `qemu-*-logs` artifact contains the QEMU console
    plus pytest's `--lg-log`.
 
+Once published, the same `report.xml` files are also visible from the
+[CI Test Dashboard](../ci-results/index.md): `collect-lime-results.yml`
+in `fcefyn_testbed_utils` pulls these artifacts every 6h and the
+dashboard's "Report ↗" link points straight to the file on Pages.
+See [Publishing results](../ci-results/publishing.md) for the
+collection details.
+
 ---
 
 ## 10. Runner prerequisites
