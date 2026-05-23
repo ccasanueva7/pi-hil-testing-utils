@@ -29,22 +29,22 @@
       "results_path": "physical/belkin_rt3200_3-24.10.6/report.xml"
     },
     {
-      "id": "physical-bpi_r4_1-24.10.6",
+      "id": "physical-bananapi_bpi-r4-24.10.6",
       "device": "bananapi_bpi-r4",
       "display_name": "BPi-R4 #1",
-      "place": "bpi_r4_1",
+      "place": "bananapi_bpi-r4",
       "release": "24.10.6",
       "type": "physical",
-      "results_path": "physical/bpi_r4_1-24.10.6/report.xml"
+      "results_path": "physical/bananapi_bpi-r4-24.10.6/report.xml"
     },
     {
-      "id": "physical-openwrt_one_1-24.10.6",
+      "id": "physical-openwrt_one-24.10.6",
       "device": "openwrt_one",
       "display_name": "OpenWrt One #1",
-      "place": "openwrt_one_1",
+      "place": "openwrt_one",
       "release": "24.10.6",
       "type": "physical",
-      "results_path": "physical/openwrt_one_1-24.10.6/report.xml"
+      "results_path": "physical/openwrt_one-24.10.6/report.xml"
     },
     {
       "id": "qemu-single-qemu_x86_64-24.10.6",
@@ -110,22 +110,22 @@
       "results_path": "physical/belkin_rt3200_3-25.12.2/report.xml"
     },
     {
-      "id": "physical-bpi_r4_1-25.12.2",
+      "id": "physical-bananapi_bpi-r4-25.12.2",
       "device": "bananapi_bpi-r4",
       "display_name": "BPi-R4 #1",
-      "place": "bpi_r4_1",
+      "place": "bananapi_bpi-r4",
       "release": "25.12.2",
       "type": "physical",
-      "results_path": "physical/bpi_r4_1-25.12.2/report.xml"
+      "results_path": "physical/bananapi_bpi-r4-25.12.2/report.xml"
     },
     {
-      "id": "physical-openwrt_one_1-25.12.2",
+      "id": "physical-openwrt_one-25.12.2",
       "device": "openwrt_one",
       "display_name": "OpenWrt One #1",
-      "place": "openwrt_one_1",
+      "place": "openwrt_one",
       "release": "25.12.2",
       "type": "physical",
-      "results_path": "physical/openwrt_one_1-25.12.2/report.xml"
+      "results_path": "physical/openwrt_one-25.12.2/report.xml"
     }
   ]
 }
