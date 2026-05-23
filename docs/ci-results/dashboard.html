@@ -25,6 +25,25 @@
       --shadow-md:      0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.06);
       --radius:         8px;
     }
+    [data-theme="dark"] {
+      --primary:        #2d6a58;
+      --primary-light:  #3d8a72;
+      --accent:         #d97706;
+      --accent-hover:   #f59e0b;
+      --pass:           #22c55e;
+      --fail:           #f87171;
+      --skip:           #fbbf24;
+      --unknown:        #6b7280;
+      --bg:             #0f172a;
+      --surface:        #1e293b;
+      --surface-alt:    #273548;
+      --border:         #334155;
+      --text:           #f1f5f9;
+      --text-muted:     #94a3b8;
+      --text-on-primary:#ffffff;
+      --shadow:         0 1px 3px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.3);
+      --shadow-md:      0 4px 6px rgba(0,0,0,.5), 0 2px 4px rgba(0,0,0,.4);
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -43,6 +62,16 @@
     header .meta { font-size: 12px; opacity: .75; text-align: right; }
     header a { color: #ffd54f; text-decoration: none; }
     header a:hover { text-decoration: underline; }
+    .theme-toggle, .refresh-btn {
+      background: none; border: 1px solid rgba(255,255,255,.3);
+      border-radius: 6px; padding: 4px 8px; cursor: pointer;
+      color: var(--text-on-primary); font-size: 16px; line-height: 1;
+      transition: background .15s;
+    }
+    .theme-toggle:hover, .refresh-btn:hover { background: rgba(255,255,255,.15); }
+    .refresh-btn { font-size: 13px; display: flex; align-items: center; gap: 5px; }
+    .refresh-btn svg { transition: transform .5s; }
+    .refresh-btn.spinning svg { transform: rotate(360deg); }
 
     main { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
 
@@ -82,15 +111,26 @@
       border: none; outline: none; font-size: 13px;
       background: transparent; width: 180px; color: var(--text);
     }
+    .release-select {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 5px 10px; font-size: 13px;
+      color: var(--text); cursor: pointer; outline: none;
+    }
+    .release-select:focus { border-color: var(--primary-light); }
 
     .device-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
 
     .device-card {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--radius); box-shadow: var(--shadow);
-      overflow: hidden; transition: box-shadow .15s;
+      overflow: hidden;
+      transition: box-shadow .2s ease, transform .2s ease, border-color .2s ease;
     }
-    .device-card:hover { box-shadow: var(--shadow-md); }
+    .device-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+      border-color: var(--primary-light);
+    }
 
     .card-header {
       display: flex; align-items: flex-start; justify-content: space-between;
@@ -105,8 +145,11 @@
       letter-spacing: .5px; padding: 1px 6px; border-radius: 3px; flex-shrink: 0;
     }
     .type-badge.physical    { background: #dbeafe; color: #1d4ed8; }
+    .type-badge.mesh        { background: #d1fae5; color: #065f46; }
+    .type-badge.mesh-pair   { background: #fef9c3; color: #854d0e; }
     .type-badge.qemu-single { background: #f3e8ff; color: #7c3aed; }
     .type-badge.qemu-mesh   { background: #fce7f3; color: #be185d; }
+    .type-badge.unit        { background: #e0f2fe; color: #0369a1; }
 
     .status-pill {
       display: inline-flex; align-items: center; gap: 4px;
@@ -182,11 +225,47 @@
     .card-meta a:hover { color: var(--accent-hover); text-decoration: underline; }
 
     .empty-state { grid-column: 1/-1; text-align: center; padding: 48px 24px; color: var(--text-muted); }
+
+    @keyframes shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position:  400px 0; }
+    }
+    .skeleton-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 16px;
+      height: 160px; overflow: hidden;
+    }
+    .skeleton-line {
+      height: 12px; border-radius: 4px; margin-bottom: 10px;
+      background: linear-gradient(90deg, var(--border) 25%, var(--surface-alt) 50%, var(--border) 75%);
+      background-size: 400px 100%;
+      animation: shimmer 1.4s infinite;
+    }
+    .skeleton-line.short { width: 55%; }
+    .skeleton-line.long  { width: 88%; }
     .no-results-msg { display: none; text-align: center; padding: 20px; color: var(--text-muted); font-size: 13px; grid-column: 1/-1; }
 
-    @media (max-width: 600px) {
-      header { flex-direction: column; height: auto; padding: 12px 16px; gap: 6px; }
-      .toolbar { flex-direction: column; align-items: flex-start; }
+    @media (max-width: 768px) {
+      header {
+        flex-wrap: wrap; height: auto; padding: 10px 14px; gap: 8px;
+      }
+      header .brand { font-size: 14px; }
+      header .brand svg { width: 18px; height: 18px; }
+      header .meta { font-size: 11px; }
+      .refresh-btn span { display: none; }
+    }
+    @media (max-width: 480px) {
+      header { flex-direction: column; align-items: flex-start; }
+      header > div:last-child { width: 100%; justify-content: flex-end; }
+    }
+    @media (max-width: 768px) {
+      .toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
+      .filter-tabs { overflow-x: auto; padding-bottom: 2px; flex-wrap: nowrap; }
+      .filter-tab { white-space: nowrap; }
+      .search-box, .release-select { width: 100%; }
+      .search-box input { flex: 1; width: auto; }
+      .device-grid { grid-template-columns: 1fr; }
+      .stats-bar { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
@@ -202,9 +281,19 @@
     </svg>
     LibreMesh CI Test Dashboard
   </div>
-  <div class="meta">
-    <div id="last-update">Loading…</div>
-    <div><a href="https://github.com/fcefyn-testbed/lime-packages/actions/workflows/build-firmware.yml" target="_blank">View CI runs ↗</a></div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="meta">
+      <div id="last-update">Loading…</div>
+      <div><a href="https://github.com/fcefyn-testbed/lime-packages/actions/workflows/build-firmware.yml" target="_blank">View CI runs ↗</a></div>
+    </div>
+    <button class="refresh-btn" id="refresh-btn" title="Refresh dashboard (R)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+      </svg>
+      <span>Refresh</span>
+    </button>
+    <button class="theme-toggle" id="theme-toggle" title="Toggle dark mode">🌙</button>
   </div>
 </header>
 
@@ -214,35 +303,76 @@
     <div class="stat-card pass"> <div class="value" id="stat-pass">—</div> <div class="label">Passing</div></div>
     <div class="stat-card fail"> <div class="value" id="stat-fail">—</div> <div class="label">Failing</div></div>
     <div class="stat-card skip"> <div class="value" id="stat-skip">—</div> <div class="label">Skipped</div></div>
+    <div class="stat-card"><div class="value" id="stat-pass-rate" style="font-size:20px;color:var(--primary)">—</div><div class="label">Pass rate</div></div>
+    <div class="stat-card"><div class="value" id="stat-unknown" style="color:var(--unknown)">—</div><div class="label">No data</div></div>
+    <div class="stat-card"><div class="value" id="stat-avg-dur" style="font-size:20px">—</div><div class="label">Avg duration</div></div>
+    <div class="stat-card"><div class="value" id="stat-tests" style="font-size:20px">—</div><div class="label">Test cases</div></div>
   </div>
 
   <div class="toolbar">
     <div class="filter-tabs">
       <button class="filter-tab active" data-filter="all">All</button>
       <button class="filter-tab" data-filter="physical">Physical</button>
+      <button class="filter-tab" data-filter="mesh">Mesh</button>
+      <button class="filter-tab" data-filter="mesh-pair">Mesh pairs</button>
       <button class="filter-tab" data-filter="qemu-single">QEMU single</button>
       <button class="filter-tab" data-filter="qemu-mesh">QEMU mesh</button>
+      <button class="filter-tab" data-filter="unit">Unit</button>
     </div>
-    <div class="search-box">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-      </svg>
-      <input type="text" id="search" placeholder="Search device or place…" />
+    <div style="display:flex;align-items:center;gap:8px">
+      <select id="release-filter" class="release-select">
+        <option value="">All releases</option>
+      </select>
+      <div class="search-box">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <input type="text" id="search" placeholder="Search device or place…" />
+      </div>
+      <button id="toggle-all-btn" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;color:var(--text-muted)" title="Expand or collapse all test cases">Expand all</button>
     </div>
   </div>
 
   <div class="device-grid" id="device-grid">
-    <div class="empty-state"><p>Loading…</p></div>
+    <div class="skeleton-card"><div class="skeleton-line short"></div><div class="skeleton-line long"></div><div class="skeleton-line short" style="margin-top:20px"></div><div class="skeleton-line long"></div></div>
+    <div class="skeleton-card"><div class="skeleton-line short"></div><div class="skeleton-line long"></div><div class="skeleton-line short" style="margin-top:20px"></div><div class="skeleton-line long"></div></div>
+    <div class="skeleton-card"><div class="skeleton-line short"></div><div class="skeleton-line long"></div><div class="skeleton-line short" style="margin-top:20px"></div><div class="skeleton-line long"></div></div>
+    <div class="skeleton-card"><div class="skeleton-line short"></div><div class="skeleton-line long"></div><div class="skeleton-line short" style="margin-top:20px"></div><div class="skeleton-line long"></div></div>
+    <div class="skeleton-card"><div class="skeleton-line short"></div><div class="skeleton-line long"></div><div class="skeleton-line short" style="margin-top:20px"></div><div class="skeleton-line long"></div></div>
+    <div class="skeleton-card"><div class="skeleton-line short"></div><div class="skeleton-line long"></div><div class="skeleton-line short" style="margin-top:20px"></div><div class="skeleton-line long"></div></div>
   </div>
 </main>
 
 <script>
 (function () {
+  // ── Dark mode ──────────────────────────────────────────────────────────────
+  const stored = localStorage.getItem('dashboard-theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = stored ? stored === 'dark' : prefersDark;
+  if (isDark) document.documentElement.setAttribute('data-theme', 'dark');
+
+  function syncToggleIcon() {
+    const btn = document.getElementById('theme-toggle');
+    if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    syncToggleIcon();
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+      document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+      localStorage.setItem('dashboard-theme', dark ? 'light' : 'dark');
+      syncToggleIcon();
+    });
+  });
+
   const REPO         = 'fcefyn-testbed/lime-packages';
   const API          = 'https://api.github.com';
   const WF           = 'build-firmware.yml';
   const RUNS         = 10;
   const RESULTS_BASE = 'results/';   // served alongside this page
+  // Base URL of the GitHub Pages site where test reports are published.
+  // Set to empty string to disable direct report links.
+  const PAGES_BASE   = 'https://fcefyn-testbed.github.io/lime-packages/ci-results/results/';
 
   // ── GitHub API (no auth, public repo) ─────────────────────────────────────
   async function ghFetch(path) {
@@ -297,6 +427,16 @@
     if (qs) return { id: `qemu-single-${qs[1].trim()}-${qs[2].trim()}`, displayName: `QEMU single · ${qs[1].trim()}`, device: qs[1].trim(), release: qs[2].trim(), type: 'qemu-single' };
     const qm = name.match(/^test-mesh-qemu\s+\(([^/]+?)\s*\/\s*([^)]+)\)$/);
     if (qm) return { id: `qemu-mesh-${qm[1].trim()}-${qm[2].trim()}`, displayName: `QEMU mesh · ${qm[1].trim()}`, device: qm[1].trim(), release: qm[2].trim(), type: 'qemu-mesh' };
+    const pm = name.match(/^test-mesh\s+\(N=([^/]+?)\s*\/\s*([^)]+)\)$/);
+    if (pm) return { id: `physical-mesh-${pm[2].trim()}`, displayName: `Physical mesh (N=${pm[1].trim()})`, release: pm[2].trim(), type: 'mesh' };
+    // alternate: test-mesh (release) without node count
+    const pm2 = name.match(/^test-mesh\s+\(([^)]+)\)$/);
+    if (pm2 && !pm2[1].includes('N=')) return { id: `physical-mesh-${pm2[1].trim()}`, displayName: `Physical mesh · ${pm2[1].trim()}`, release: pm2[1].trim(), type: 'mesh' };
+    const pp = name.match(/^test-mesh-pairs\s+\(#(\d+)\s+([^/]+?)\+([^/]+?)\s*\/\s*([^)]+)\)$/);
+    if (pp) return { id: `mesh-pair-${pp[1].trim()}-${pp[4].trim()}`, displayName: `Mesh pair #${pp[1].trim()} · ${pp[2].trim()}+${pp[3].trim()}`, release: pp[4].trim(), type: 'mesh-pair' };
+    // test-unit (unit tests, no device/release matrix)
+    const tu = name.match(/^test-unit(?:\s+\(([^)]*)\))?$/);
+    if (tu) return { id: `unit-${tu[1]||'default'}`, displayName: `Unit tests${tu[1] ? ' · '+tu[1] : ''}`, release: tu[1]||null, type: 'unit' };
     return null;
   }
 
@@ -323,8 +463,10 @@
 
     const dots = entry.runs.slice(0, 10).map(r => {
       const s = statusOf(r.conclusion);
-      const t = new Date(r.started_at).toLocaleString();
-      return `<div class="run-dot ${s}" title="${t} — ${s}" onclick="window.open('${r.html_url}','_blank')"></div>`;
+      const t = new Date(r.started_at).toLocaleString(undefined, { dateStyle:'short', timeStyle:'short' });
+      const dur = r.duration_s ? ` · ${Math.floor(r.duration_s/60)}m${r.duration_s%60}s` : '';
+      const label = { pass:'✓ Pass', fail:'✗ Fail', skip:'– Skip', unknown:'?' }[s] || s;
+      return `<div class="run-dot ${s}" title="${t}${dur} — ${label}" onclick="window.open('${r.html_url}','_blank')"></div>`;
     }).join('');
 
     const latestTime = latest
@@ -372,7 +514,7 @@
     }
 
     return `
-      <div class="device-card" data-type="${entry.type}" data-name="${entry.id} ${entry.displayName}">
+      <div class="device-card" data-type="${entry.type}" data-name="${entry.id} ${entry.displayName}" data-release="${entry.release||''}">
         <div class="card-header">
           <div class="info">
             <div class="card-title">${esc(entry.displayName)}</div>
@@ -391,7 +533,10 @@
           ${detailHtml}
           <div class="card-meta">
             <span>${latestTime}${dur ? ' · ' + dur : ''}</span>
-            ${latest ? `<a href="${latest.html_url}" target="_blank">View run ↗</a>` : ''}
+            <span style="display:flex;gap:10px;align-items:center">
+              ${PAGES_BASE && resultsPath(entry) ? `<a href="${PAGES_BASE}${resultsPath(entry)}" target="_blank">Report ↗</a>` : ''}
+              ${latest ? `<a href="${latest.html_url}" target="_blank">CI run ↗</a>` : ''}
+            </span>
           </div>
         </div>
       </div>`;
@@ -410,12 +555,25 @@
 
   // ── Filter + search ────────────────────────────────────────────────────────
   let currentFilter = 'all';
+  let currentRelease = '';
+
+  function populateReleaseFilter(entries) {
+    const releases = [...new Set(entries.map(e => e.release).filter(Boolean))].sort();
+    const sel = document.getElementById('release-filter');
+    releases.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r; opt.textContent = `OpenWrt ${r}`;
+      sel.appendChild(opt);
+    });
+  }
+
   function applyFilter() {
     const term = document.getElementById('search').value.toLowerCase();
     const grid = document.getElementById('device-grid');
     let visible = 0;
     for (const card of grid.querySelectorAll('.device-card')) {
       const show = (currentFilter === 'all' || card.dataset.type === currentFilter)
+                && (!currentRelease || card.dataset.release === currentRelease)
                 && (!term || card.dataset.name.toLowerCase().includes(term));
       card.style.display = show ? '' : 'none';
       if (show) visible++;
@@ -434,17 +592,34 @@
     });
   });
   document.getElementById('search').addEventListener('input', applyFilter);
+  document.getElementById('release-filter').addEventListener('change', e => {
+    currentRelease = e.target.value;
+    applyFilter();
+  });
 
   function updateStats(entries) {
-    let pass=0, fail=0, skip=0;
+    let pass=0, fail=0, skip=0, unknown=0;
+    const durations = [];
     for (const e of entries) {
-      const s = e.runs[0] ? statusOf(e.runs[0].conclusion) : 'unknown';
-      if (s==='pass') pass++; else if (s==='fail') fail++; else if (s==='skip') skip++;
+      const latest = e.runs[0];
+      const s = latest ? statusOf(latest.conclusion) : 'unknown';
+      if (s==='pass') pass++; else if (s==='fail') fail++; else if (s==='skip') skip++; else unknown++;
+      if (latest && latest.duration_s) durations.push(latest.duration_s);
     }
-    document.getElementById('stat-total').textContent = entries.length;
-    document.getElementById('stat-pass').textContent  = pass;
-    document.getElementById('stat-fail').textContent  = fail;
-    document.getElementById('stat-skip').textContent  = skip;
+    document.getElementById('stat-total').textContent   = entries.length;
+    document.getElementById('stat-pass').textContent    = pass;
+    document.getElementById('stat-fail').textContent    = fail;
+    document.getElementById('stat-skip').textContent    = skip;
+    document.getElementById('stat-unknown').textContent = unknown;
+    const known = pass + fail + skip;
+    if (known > 0) document.getElementById('stat-pass-rate').textContent = Math.round(pass/known*100) + '%';
+    if (durations.length) {
+      const avg = Math.round(durations.reduce((a,b) => a+b, 0) / durations.length);
+      document.getElementById('stat-avg-dur').textContent =
+        avg >= 60 ? `${Math.floor(avg/60)}m${avg%60}s` : `${avg}s`;
+    }
+    const totalTests = entries.reduce((sum, e) => sum + (e._report ? e._report.tests : 0), 0);
+    if (totalTests > 0) document.getElementById('stat-tests').textContent = totalTests;
   }
 
   // ── Main ──────────────────────────────────────────────────────────────────
@@ -452,7 +627,14 @@
     const grid = document.getElementById('device-grid');
 
     const runsData = await ghFetch(`/repos/${REPO}/actions/workflows/${WF}/runs?per_page=${RUNS}`);
-    if (!runsData || !runsData.workflow_runs.length) {
+    if (!runsData) {
+      grid.innerHTML = `<div class="empty-state">
+        <p style="font-size:16px;margin-bottom:8px">⚠ Could not reach the GitHub API</p>
+        <p style="font-size:13px">Rate limit or network error. <button onclick="document.getElementById('refresh-btn').click()" style="color:var(--accent);background:none;border:none;cursor:pointer;font-size:13px;text-decoration:underline">Try again</button></p>
+      </div>`;
+      return;
+    }
+    if (!runsData.workflow_runs.length) {
       grid.innerHTML = `<div class="empty-state"><p>No workflow runs found.</p></div>`;
       return;
     }
@@ -503,7 +685,7 @@
       return;
     }
 
-    const order = ['physical', 'qemu-single', 'qemu-mesh'];
+    const order = ['physical', 'mesh', 'mesh-pair', 'qemu-single', 'qemu-mesh'];
     const entries = Array.from(byId.values()).sort((a,b) => {
       const d = order.indexOf(a.type) - order.indexOf(b.type);
       return d !== 0 ? d : a.id.localeCompare(b.id);
@@ -511,6 +693,7 @@
 
     // Render immediately with API data
     grid.innerHTML = entries.map(renderCard).join('');
+    populateReleaseFilter(entries);
     updateStats(entries);
     applyFilter();
 
@@ -524,9 +707,38 @@
       const cards = grid.querySelectorAll('.device-card');
       if (cards[i]) cards[i].outerHTML = renderCard(entry);
     }));
+    updateStats(entries);
   }
 
   loadDashboard();
+
+  let allExpanded = false;
+  document.getElementById('toggle-all-btn').addEventListener('click', () => {
+    allExpanded = !allExpanded;
+    document.querySelectorAll('.test-cases').forEach(el => el.classList.toggle('open', allExpanded));
+    document.querySelectorAll('.expand-btn').forEach(btn => btn.classList.toggle('open', allExpanded));
+    document.getElementById('toggle-all-btn').textContent = allExpanded ? 'Collapse all' : 'Expand all';
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'r' || e.key === 'R') {
+      if (document.activeElement.tagName === 'INPUT') return;
+      document.getElementById('refresh-btn').click();
+    }
+  });
+
+  document.getElementById('refresh-btn').addEventListener('click', () => {
+    const btn = document.getElementById('refresh-btn');
+    btn.classList.add('spinning');
+    btn.disabled = true;
+    // Reset release filter options before reload
+    const sel = document.getElementById('release-filter');
+    while (sel.options.length > 1) sel.remove(1);
+    loadDashboard().finally(() => {
+      btn.classList.remove('spinning');
+      btn.disabled = false;
+    });
+  });
 })();
 </script>
 </body>

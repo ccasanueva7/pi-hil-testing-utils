@@ -95,6 +95,7 @@ nav:
       - Labgrid helper scripts: operar/labgrid-scripts.md
       - Wake-on-LAN: operar/wake-on-lan-setup.md
       - ZeroTier (admin-only): operar/zerotier-remote-access.md
+      - Debugging FAQ: operar/debugging-faq.md
   - Component configuration:
       - Hardware and rack reference:
           - Hardware catalog: configuracion/catalogo-hardware.md
@@ -104,6 +105,10 @@ nav:
           - Switch: configuracion/switch-config.md
           - Gateway: configuracion/gateway.md
           - DUTs: configuracion/duts-config.md
+          - Devices:
+              - Belkin RT3200: configuracion/device-belkin-rt3200.md
+              - BPi-R4: configuracion/device-bpi-r4.md
+              - OpenWrt One: configuracion/device-openwrt-one.md
       - Services and automation:
           - Arduino relay: configuracion/arduino-relay.md
           - PoE switch control: configuracion/poe-switch-control.md
@@ -130,6 +135,9 @@ nav:
           - "QEMU + vwifi virtual mesh": diseno/lime-packages/qemu-vwifi.md
           - "Trusted-author CI gate": diseno/lime-packages/trusted-author-gate.md
       - Virtual mesh: diseno/virtual-mesh.md
+      - Full test run flow: diseno/test-run-flow.md
+      - QEMU setup: diseno/qemu-setup.md
+      - vwifi setup: diseno/vwifi.md
   - CI Test Dashboard:
       - Overview: ci-results/index.md
       - Architecture: ci-results/architecture.md
@@ -137,4 +145,5 @@ nav:
       - Publishing results: ci-results/publishing.md
       - Usage guide: ci-results/usage.md
       - Maintenance: ci-results/maintenance.md
+  - Glossary: glosario.md
   - Demos: demos.md
