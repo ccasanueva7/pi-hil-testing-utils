@@ -133,7 +133,7 @@ jobs:
         id: cpr
         uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ secrets.TESTBED_UTILS_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           base: develop
           branch: bot/lime-results
           delete-branch: true
@@ -155,7 +155,7 @@ jobs:
       - name: Enable auto-merge
         if: steps.cpr.outputs.pull-request-number
         env:
-          GH_TOKEN: ${{ secrets.TESTBED_UTILS_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr merge --auto --squash \
             --repo "${{ github.repository }}" \
