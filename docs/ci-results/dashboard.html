@@ -395,6 +395,9 @@
     if (pm) return { id: `physical-mesh-${pm[2].trim()}`, displayName: `Physical mesh (N=${pm[1].trim()})`, release: pm[2].trim(), type: 'mesh' };
     const pp = name.match(/^test-mesh-pairs\s+\(#(\d+)\s+([^/]+?)\+([^/]+?)\s*\/\s*([^)]+)\)$/);
     if (pp) return { id: `mesh-pair-${pp[1].trim()}-${pp[4].trim()}`, displayName: `Mesh pair #${pp[1].trim()} · ${pp[2].trim()}+${pp[3].trim()}`, release: pp[4].trim(), type: 'mesh-pair' };
+    // test-unit (unit tests, no device/release matrix)
+    const tu = name.match(/^test-unit(?:\s+\(([^)]*)\))?$/);
+    if (tu) return { id: `unit-${tu[1]||'default'}`, displayName: `Unit tests${tu[1] ? ' · '+tu[1] : ''}`, release: tu[1]||null, type: 'unit' };
     return null;
   }
 
