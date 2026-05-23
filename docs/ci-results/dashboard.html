@@ -144,6 +144,7 @@
     .type-badge.mesh-pair   { background: #fef9c3; color: #854d0e; }
     .type-badge.qemu-single { background: #f3e8ff; color: #7c3aed; }
     .type-badge.qemu-mesh   { background: #fce7f3; color: #be185d; }
+    .type-badge.unit        { background: #e0f2fe; color: #0369a1; }
 
     .status-pill {
       display: inline-flex; align-items: center; gap: 4px;
@@ -393,6 +394,9 @@
     if (qm) return { id: `qemu-mesh-${qm[1].trim()}-${qm[2].trim()}`, displayName: `QEMU mesh · ${qm[1].trim()}`, device: qm[1].trim(), release: qm[2].trim(), type: 'qemu-mesh' };
     const pm = name.match(/^test-mesh\s+\(N=([^/]+?)\s*\/\s*([^)]+)\)$/);
     if (pm) return { id: `physical-mesh-${pm[2].trim()}`, displayName: `Physical mesh (N=${pm[1].trim()})`, release: pm[2].trim(), type: 'mesh' };
+    // alternate: test-mesh (release) without node count
+    const pm2 = name.match(/^test-mesh\s+\(([^)]+)\)$/);
+    if (pm2 && !pm2[1].includes('N=')) return { id: `physical-mesh-${pm2[1].trim()}`, displayName: `Physical mesh · ${pm2[1].trim()}`, release: pm2[1].trim(), type: 'mesh' };
     const pp = name.match(/^test-mesh-pairs\s+\(#(\d+)\s+([^/]+?)\+([^/]+?)\s*\/\s*([^)]+)\)$/);
     if (pp) return { id: `mesh-pair-${pp[1].trim()}-${pp[4].trim()}`, displayName: `Mesh pair #${pp[1].trim()} · ${pp[2].trim()}+${pp[3].trim()}`, release: pp[4].trim(), type: 'mesh-pair' };
     // test-unit (unit tests, no device/release matrix)
