@@ -81,6 +81,24 @@
       "release": "24.10.6",
       "type": "physical",
       "results_path": "physical/bpi_r4_2-24.10.6/report.xml"
+    },
+    {
+      "id": "physical-openwrt_one_1-24.10.6",
+      "device": "openwrt_one",
+      "display_name": "OpenWrt One #1",
+      "place": "openwrt_one_1",
+      "release": "24.10.6",
+      "type": "physical",
+      "results_path": "physical/openwrt_one_1-24.10.6/report.xml"
+    },
+    {
+      "id": "physical-openwrt_one_2-24.10.6",
+      "device": "openwrt_one",
+      "display_name": "OpenWrt One #2",
+      "place": "openwrt_one_2",
+      "release": "24.10.6",
+      "type": "physical",
+      "results_path": "physical/openwrt_one_2-24.10.6/report.xml"
     }
   ]
 }
