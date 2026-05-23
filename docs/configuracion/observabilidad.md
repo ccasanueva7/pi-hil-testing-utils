@@ -94,7 +94,7 @@ Three dashboards:
 | Device info | Instant tables `node_uname_info`, `node_openwrt_info` |
 | CPU & load | CPU by mode (stacked), load 1/5/15m |
 | Memory | Total / available / used |
-| Network | Traffic and packets per interface (excluding `lo`) |
+| Network | Traffic and packets per interface (excluding `lo`); plus a per-interface errors and drops panel with `rate(node_network_{receive,transmit}_{errs,drop}_total[2m])` |
 | Disk | Usage % per mountpoint, free space |
 | Temperature | `node_hwmon_temp_celsius`, `node_thermal_zone_temp`, CPU stats / max / ieee80211 radios |
 | Wi-Fi | `wifi_network_*` (AP), `wifi_stations` / `wifi_station_signal_dbm` (stations, if opkg packages present) |
