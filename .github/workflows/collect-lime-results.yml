@@ -1,0 +1,139 @@
+name: Collect lime-packages test results
+
+# Pulls JUnit `report.xml` files from recent CI runs of
+# fcefyn-testbed/lime-packages and commits them under
+# `docs/ci-results/results/` so the dashboard can render them
+# (otherwise the per-job "Report ↗" links 404).
+#
+# This is the "pull from another side" approach: lime-packages does
+# not need to push results to this repo. Requires the secret
+# `LIME_PACKAGES_TOKEN` (fine-grained PAT scoped to lime-packages,
+# Actions: Read).
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'   # every 6h, off-peak minute
+  workflow_dispatch:
+    inputs:
+      runs:
+        description: 'How many recent CI runs to scan'
+        required: false
+        default: '10'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: collect-lime-results
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout develop
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
+
+      - name: Download lime-packages report.xml artifacts
+        env:
+          GH_TOKEN: ${{ secrets.LIME_PACKAGES_TOKEN }}
+          SRC_REPO: fcefyn-testbed/lime-packages
+          RUNS: ${{ github.event.inputs.runs || '10' }}
+        run: |
+          set -euo pipefail
+          mkdir -p docs/ci-results/results
+
+          # Scan build-firmware.yml (physical, mesh, qemu) and tests.yml (unit).
+          workflows=(build-firmware.yml tests.yml)
+          new_files=0
+
+          for wf in "${workflows[@]}"; do
+            echo "::group::Workflow: $wf"
+            run_ids=$(gh api \
+              "repos/${SRC_REPO}/actions/workflows/${wf}/runs?status=completed&per_page=${RUNS}" \
+              --jq '.workflow_runs[].id' || echo "")
+
+            for run_id in $run_ids; do
+              echo "Run $run_id"
+              artifacts=$(gh api \
+                "repos/${SRC_REPO}/actions/runs/${run_id}/artifacts?per_page=100" \
+                --jq '.artifacts[] | select(.expired == false) | select(.name | startswith("test-results-")) | "\(.id) \(.name)"' \
+                || echo "")
+
+              while IFS= read -r line; do
+                [ -z "$line" ] && continue
+                artifact_id="${line%% *}"
+                name="${line#* }"
+
+                # Map artifact name -> results subpath
+                dest=""
+                if [[ "$name" == "test-results-unit" ]]; then
+                  dest="unit"
+                elif [[ "$name" =~ ^test-results-qemu-single-(.+)-([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+                  dest="qemu-single/${BASH_REMATCH[1]}-${BASH_REMATCH[2]}"
+                elif [[ "$name" =~ ^test-results-qemu-mesh-(.+)-([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+                  dest="qemu-mesh/${BASH_REMATCH[1]}-${BASH_REMATCH[2]}"
+                elif [[ "$name" =~ ^test-results-mesh-pairs-(.+)-([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+                  dest="mesh-pairs/${BASH_REMATCH[1]}-${BASH_REMATCH[2]}"
+                elif [[ "$name" =~ ^test-results-mesh-([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+                  dest="mesh/${BASH_REMATCH[1]}"
+                elif [[ "$name" =~ ^test-results-(.+)-([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+                  # Catch-all physical: test-results-{place}-{release}
+                  dest="physical/${BASH_REMATCH[1]}-${BASH_REMATCH[2]}"
+                else
+                  echo "  skip $name (unrecognized pattern)"
+                  continue
+                fi
+
+                outdir="docs/ci-results/results/${dest}"
+                if [[ -f "${outdir}/report.xml" ]]; then
+                  # Already collected from an earlier (more recent) run.
+                  continue
+                fi
+
+                tmp=$(mktemp -d)
+                if ! gh api \
+                      "repos/${SRC_REPO}/actions/artifacts/${artifact_id}/zip" \
+                      > "$tmp/a.zip" 2>/dev/null; then
+                  echo "  download failed: $name"
+                  rm -rf "$tmp"
+                  continue
+                fi
+
+                # report.xml is at the artifact root for unit jobs and
+                # under the logs dir for lab/qemu jobs — try both.
+                mkdir -p "$outdir"
+                if unzip -j -q -o "$tmp/a.zip" "report.xml" -d "$outdir" 2>/dev/null \
+                   || unzip -j -q -o "$tmp/a.zip" "*/report.xml" -d "$outdir" 2>/dev/null; then
+                  echo "  collected $name -> $outdir/report.xml"
+                  new_files=$((new_files + 1))
+                else
+                  echo "  no report.xml inside $name"
+                  rmdir "$outdir" 2>/dev/null || true
+                fi
+                rm -rf "$tmp"
+              done <<< "$artifacts"
+            done
+            echo "::endgroup::"
+          done
+
+          echo "Collected $new_files new report.xml file(s)."
+          echo "NEW_FILES=$new_files" >> "$GITHUB_ENV"
+
+      - name: Commit and push results
+        if: env.NEW_FILES != '0'
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/ci-results/results/
+          if git diff --cached --quiet; then
+            echo "Nothing to commit."
+            exit 0
+          fi
+          git commit -m "ci: collect lime-packages test results ($NEW_FILES new)"
+          git push origin develop
