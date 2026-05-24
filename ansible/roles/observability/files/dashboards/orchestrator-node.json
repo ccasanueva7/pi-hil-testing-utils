@@ -2580,6 +2580,37 @@
         { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "node_timex_offset_seconds{job=\"orchestrator-host\"}", "refId": "A" }
       ],
       "description": "Diferencia (en segundos) entre el reloj local y el peer NTP, según el kernel timex. Verde < 50 ms; rojo > 500 ms (revisar chrony/ntpd)."
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": null },
+            { "color": "yellow", "value": 60 },
+            { "color": "red",    "value": 80 }
+          ]},
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 115 },
+      "id": 112,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
+      },
+      "title": "Conntrack utilization",
+      "type": "stat",
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "100 * node_nf_conntrack_entries{job=\"orchestrator-host\"} / node_nf_conntrack_entries_limit{job=\"orchestrator-host\"}", "refId": "A" }
+      ],
+      "description": "Porcentaje de la tabla nf_conntrack en uso. Relevante para el orchestrator porque mantiene autossh + SSH-proxy por DUT más las conexiones de Prometheus/Grafana. Si llega a 80% empiezan a descartarse flujos nuevos."
     }
   ],
   "refresh": "30s",
