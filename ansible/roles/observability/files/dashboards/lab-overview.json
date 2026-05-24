@@ -259,6 +259,44 @@
         { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "node_openwrt_info{dut=~\".+\"}", "format": "table", "instant": true, "refId": "A" }
       ],
       "description": "Tabla de firmware y target por DUT. Fuente: node_openwrt_info (label firmware y target del scrape config)."
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 45 },
+      "id": 60,
+      "title": "Load average (1m)",
+      "type": "row",
+      "description": "Carga del kernel a 1 minuto por DUT, comparable entre dispositivos."
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": null },
+            { "color": "yellow", "value": 1 },
+            { "color": "red",    "value": 2 }
+          ]},
+          "unit": "short",
+          "decimals": 2
+        }
+      },
+      "gridPos": { "h": 5, "w": 24, "x": 0, "y": 46 },
+      "id": 61,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
+      },
+      "title": "Load average 1m per device",
+      "type": "stat",
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "node_load1{dut=~\".+\"}", "legendFormat": "{{dut}}", "refId": "A" }
+      ],
+      "description": "node_load1: tareas runnable + en uninterruptible sleep, promediadas en el último minuto. Útil para detectar DUTs trabajando bajo presión incluso si el % CPU instantáneo está bajo."
     }
   ],
   "refresh": "30s",
@@ -271,5 +309,5 @@
   "timezone": "browser",
   "title": "FCEFyN Testbed - Lab Overview",
   "uid": "fcefyn-lab-overview",
-  "version": 1
+  "version": 2
 }
