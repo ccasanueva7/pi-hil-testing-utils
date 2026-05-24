@@ -86,11 +86,18 @@ nav:
       - Rack quick reference: operar/rack-cheatsheets.md
       - Routine operations: operar/lab-routine-operations.md
       - Adding a DUT: operar/dut-onboarding.md
+      - Belkin U-Boot TFTP — PC Ethernet IP: operar/belkin-uboot-tftp-pc-network.md
       - Build firmware: operar/build-firmware-manual.md
       - "CI: Build & Test": operar/ci-build-and-test.md
       - Virtual mesh (local): operar/virtual-mesh-local.md
+      - DUT provisioning (full): operar/provision-dut.md
+      - DUT exporter setup: operar/setup-dut-exporter.md
+      - Mesh IP provisioning: operar/provision-mesh-ip.md
+      - DUT gateway management: operar/dut-gateway.md
+      - Labgrid helper scripts: operar/labgrid-scripts.md
       - Wake-on-LAN: operar/wake-on-lan-setup.md
       - ZeroTier (admin-only): operar/zerotier-remote-access.md
+      - Debugging FAQ: operar/debugging-faq.md
   - Component configuration:
       - Hardware and rack reference:
           - Hardware catalog: configuracion/catalogo-hardware.md
@@ -100,10 +107,16 @@ nav:
           - Switch: configuracion/switch-config.md
           - Gateway: configuracion/gateway.md
           - DUTs: configuracion/duts-config.md
+          - Devices:
+              - Belkin RT3200: configuracion/device-belkin-rt3200.md
+              - BPi-R4: configuracion/device-bpi-r4.md
+              - OpenWrt One: configuracion/device-openwrt-one.md
       - Services and automation:
           - Arduino relay: configuracion/arduino-relay.md
+          - PoE switch control: configuracion/poe-switch-control.md
           - TFTP / dnsmasq: configuracion/tftp-server.md
           - Ansible / Labgrid: configuracion/ansible-labgrid.md
+          - Ansible roles reference: configuracion/ansible-roles.md
           - CI Runner: configuracion/ci-runner.md
       - Observability:
           - Lab host stack (Prometheus and Grafana): configuracion/observabilidad.md
@@ -115,7 +128,24 @@ nav:
       - openwrt-tests onboarding: diseno/openwrt-tests-onboarding.md
       - Contributing a new lab: diseno/new-lab-contribution.md
       - openwrt-tests CI flow: diseno/openwrt-tests-ci-flow.md
-      - lime-packages CI build: diseno/lime-packages-ci-flow.md
-      - lime-packages CI tests: diseno/lime-packages-test-flow.md
+      - "lime-packages CI: build": diseno/lime-packages-ci-flow.md
+      - "lime-packages CI: tests": diseno/lime-packages-test-flow.md
+      - "lime-packages CI: adding a device": diseno/lime-packages-add-device.md
+      - "lime-packages CI internals":
+          - "Belkin RT3200 layout 1.0 DTB patch": diseno/lime-packages/belkin-rt3200-dtb.md
+          - "ImageBuilder limits for ath79 / legacy linksys_e8450": diseno/lime-packages/imagebuilder-limits.md
+          - "QEMU + vwifi virtual mesh": diseno/lime-packages/qemu-vwifi.md
+          - "Trusted-author CI gate": diseno/lime-packages/trusted-author-gate.md
       - Virtual mesh: diseno/virtual-mesh.md
+      - Full test run flow: diseno/test-run-flow.md
+      - QEMU setup: diseno/qemu-setup.md
+      - vwifi setup: diseno/vwifi.md
+  - CI Test Dashboard:
+      - Overview: ci-results/index.md
+      - Architecture: ci-results/architecture.md
+      - Device registry: ci-results/devices.md
+      - Publishing results: ci-results/publishing.md
+      - Usage guide: ci-results/usage.md
+      - Maintenance: ci-results/maintenance.md
+  - Glossary: glosario.md
   - Demos: demos.md

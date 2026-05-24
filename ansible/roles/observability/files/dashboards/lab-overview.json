@@ -1,0 +1,275 @@
+{
+  "annotations": { "list": [] },
+  "description": "FCEFyN Testbed — Lab-wide overview: all DUTs and gateway at a glance. Uptime, CPU, RAM and scrape status per device.",
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "title": "Device health at a glance",
+      "type": "row",
+      "description": "Estado actual de cada DUT y gateway: scrape up, uptime, CPU y RAM."
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            { "type": "value", "options": {
+              "0": { "text": "DOWN", "color": "red", "index": 0 },
+              "1": { "text": "UP", "color": "green", "index": 1 }
+            }}
+          ],
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "red", "value": null },
+            { "color": "green", "value": 1 }
+          ]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 1 },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto",
+        "orientation": "auto"
+      },
+      "title": "Scrape up — all devices",
+      "type": "stat",
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "up{dut=~\".+\"}", "legendFormat": "{{dut}}", "refId": "A" }
+      ],
+      "description": "Verde = Prometheus puede scrapear el dispositivo. Rojo = sin datos (apagado, sin red o node_exporter caído)."
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 },
+      "id": 10,
+      "title": "Uptime",
+      "type": "row",
+      "description": "Tiempo encendido de cada dispositivo desde el último arranque."
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": null },
+            { "color": "yellow", "value": 3600 },
+            { "color": "orange", "value": 86400 }
+          ]},
+          "unit": "s"
+        }
+      },
+      "gridPos": { "h": 5, "w": 24, "x": 0, "y": 8 },
+      "id": 11,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
+      },
+      "title": "Uptime per device",
+      "type": "stat",
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "node_time_seconds{dut=~\".+\"} - node_boot_time_seconds{dut=~\".+\"}", "legendFormat": "{{dut}}", "refId": "A" }
+      ],
+      "description": "Tiempo desde el último arranque. Verde = recién encendido; naranja = lleva más de 24 h."
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 13 },
+      "id": 20,
+      "title": "CPU",
+      "type": "row",
+      "description": "Uso de CPU (non-idle) en cada dispositivo."
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": null },
+            { "color": "yellow", "value": 50 },
+            { "color": "red", "value": 80 }
+          ]},
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      },
+      "gridPos": { "h": 5, "w": 24, "x": 0, "y": 14 },
+      "id": 21,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
+      },
+      "title": "CPU busy per device",
+      "type": "stat",
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "100 - (avg by (dut) (rate(node_cpu_seconds_total{dut=~\".+\",mode=\"idle\"}[2m])) * 100)", "legendFormat": "{{dut}}", "refId": "A" }
+      ],
+      "description": "Porcentaje de CPU en uso (100 - idle rate 2m)."
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 19 },
+      "id": 30,
+      "title": "Memory",
+      "type": "row",
+      "description": "Uso de RAM por dispositivo."
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": null },
+            { "color": "yellow", "value": 60 },
+            { "color": "red", "value": 85 }
+          ]},
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      },
+      "gridPos": { "h": 5, "w": 24, "x": 0, "y": 20 },
+      "id": 31,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
+      },
+      "title": "RAM used per device",
+      "type": "stat",
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "100 - (node_memory_MemAvailable_bytes{dut=~\".+\"} / node_memory_MemTotal_bytes{dut=~\".+\"} * 100)", "legendFormat": "{{dut}}", "refId": "A" }
+      ],
+      "description": "Porcentaje de RAM no disponible (100 - MemAvailable/MemTotal)."
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 25 },
+      "id": 40,
+      "title": "Device table",
+      "type": "row",
+      "description": "Tabla consolidada: uptime, CPU, RAM y scrape status en una sola vista."
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "align": "auto", "displayMode": "auto" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "up" }, "properties": [
+            { "id": "custom.displayMode", "value": "color-background" },
+            { "id": "thresholds", "value": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] } },
+            { "id": "mappings", "value": [{ "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }] }
+          ]},
+          { "matcher": { "id": "byName", "options": "CPU %" }, "properties": [
+            { "id": "unit", "value": "percent" },
+            { "id": "custom.displayMode", "value": "color-background" },
+            { "id": "thresholds", "value": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 50 }, { "color": "red", "value": 80 }] } }
+          ]},
+          { "matcher": { "id": "byName", "options": "RAM %" }, "properties": [
+            { "id": "unit", "value": "percent" },
+            { "id": "custom.displayMode", "value": "color-background" },
+            { "id": "thresholds", "value": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 60 }, { "color": "red", "value": 85 }] } }
+          ]},
+          { "matcher": { "id": "byName", "options": "Uptime" }, "properties": [
+            { "id": "unit", "value": "s" }
+          ]}
+        ]
+      },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 26 },
+      "id": 41,
+      "options": { "showHeader": true, "sortBy": [{ "displayName": "dut", "desc": false }] },
+      "title": "All devices — consolidated status",
+      "transformations": [
+        { "id": "merge", "options": {} },
+        { "id": "organize", "options": {
+          "renameByName": {
+            "Value #A": "up",
+            "Value #B": "Uptime",
+            "Value #C": "CPU %",
+            "Value #D": "RAM %"
+          }
+        }}
+      ],
+      "type": "table",
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "up{dut=~\".+\"}", "legendFormat": "{{dut}}", "refId": "A", "instant": true, "format": "table" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "node_time_seconds{dut=~\".+\"} - node_boot_time_seconds{dut=~\".+\"}", "legendFormat": "{{dut}}", "refId": "B", "instant": true, "format": "table" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "100 - (avg by (dut) (rate(node_cpu_seconds_total{dut=~\".+\",mode=\"idle\"}[2m])) * 100)", "legendFormat": "{{dut}}", "refId": "C", "instant": true, "format": "table" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "100 - (node_memory_MemAvailable_bytes{dut=~\".+\"} / node_memory_MemTotal_bytes{dut=~\".+\"} * 100)", "legendFormat": "{{dut}}", "refId": "D", "instant": true, "format": "table" }
+      ],
+      "description": "Vista consolidada: un DUT por fila con scrape up, uptime, CPU% y RAM%."
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 36 },
+      "id": 50,
+      "title": "Firmware & target",
+      "type": "row",
+      "description": "Versión de firmware y target OpenWrt de cada DUT según node_openwrt_info."
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "align": "auto", "displayMode": "auto" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 37 },
+      "id": 51,
+      "options": { "showHeader": true, "sortBy": [{ "displayName": "dut", "desc": false }] },
+      "title": "Firmware per device",
+      "transformations": [
+        { "id": "labelsToFields", "options": { "mode": "columns" } },
+        { "id": "organize", "options": {
+          "excludeByName": { "Time": true, "Value": true, "__name__": true, "instance": true, "job": true, "target": false },
+          "renameByName": { "dut": "device", "firmware": "firmware", "target": "OpenWrt target" }
+        }}
+      ],
+      "type": "table",
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "node_openwrt_info{dut=~\".+\"}", "format": "table", "instant": true, "refId": "A" }
+      ],
+      "description": "Tabla de firmware y target por DUT. Fuente: node_openwrt_info (label firmware y target del scrape config)."
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 36,
+  "style": "dark",
+  "tags": ["fcefyn", "node-exporter", "lab-overview"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "FCEFyN Testbed - Lab Overview",
+  "uid": "fcefyn-lab-overview",
+  "version": 1
+}

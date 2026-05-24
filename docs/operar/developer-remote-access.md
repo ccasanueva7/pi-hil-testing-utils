@@ -6,29 +6,25 @@ Step-by-step guide for developers who want to run OpenWrt or LibreMesh tests on 
 
 ## 1. Request access
 
-### 1.1 Generate SSH key
+### 1.1 Add an SSH key to your GitHub profile
 
-```bash
-ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -C "your@email" -N ""
-cat ~/.ssh/id_ed25519.pub
-```
+The upstream Ansible playbook fetches SSH keys from `https://github.com/<username>.keys`. Ensure at least one ed25519 public key is registered on your GitHub account under **Settings > SSH and GPG keys**.
 
-### 1.2 Add the key to labnet.yaml
+### 1.2 Add your GitHub username to labnet.yaml
 
-In [aparcar/openwrt-tests](https://github.com/aparcar/openwrt-tests), create a branch and edit `labnet.yaml`:
+In [aparcar/openwrt-tests](https://github.com/aparcar/openwrt-tests), create a branch and edit `labnet.yaml`. Add your GitHub username to `access:` (SSH access) and optionally `maintainers:` (healthcheck notifications) of the target lab:
 
 ```yaml
-developers:
-  your_github_user:
-    sshkey: ssh-ed25519 AAAAC3Nza... your@email
-
 labs:
   labgrid-fcefyn:
-    developers:
-      - your_github_user
+    maintainers:
+      - francoriba
+    access:
+      - francoriba
+      - your_github_user   # add here
 ```
 
-Open a PR. A maintainer merges it.
+No `sshkey` field is needed - Ansible downloads keys from GitHub at deploy time. Open a PR. A maintainer merges it.
 
 ### 1.3 Deploy the key to the lab host
 
@@ -39,20 +35,11 @@ cd openwrt-tests
 ansible-playbook -i ansible/inventory.ini ansible/playbook_labgrid.yml --limit labgrid-fcefyn -K
 ```
 
-Alternative (manual):
+Ansible fetches your public keys from `https://github.com/your_github_user.keys` and adds them to `~labgrid-dev/.ssh/authorized_keys`. If you rotate keys on GitHub, re-running the playbook updates access automatically.
 
-```bash
-ssh admin_user@<HOST_IP>
-echo "ssh-ed25519 AAAAC3Nza... your@email" | sudo tee -a /home/labgrid-dev/.ssh/authorized_keys
-sudo chown labgrid-dev:labgrid-dev /home/labgrid-dev/.ssh/authorized_keys
-sudo chmod 600 /home/labgrid-dev/.ssh/authorized_keys
-```
+### 1.4 Register the key on the SSH gateway VM
 
-### 1.4 Register the key on the upstream coordinator
-
-The upstream Ansible playbook deploys keys to `[labs]` hosts only, **not** to `[coordinator]`. The developer key must be added manually to `~labgrid-dev/.ssh/authorized_keys` on `labgrid-coordinator`.
-
-After 1.2 is merged, ping the upstream maintainer ([@aparcar](https://github.com/aparcar)) with the public key fingerprint and username. Without this, SSH to the coordinator fails with `Permission denied (publickey)`.
+The upstream `coordinator.yml` playbook also fetches keys from GitHub for all users in `maintainers` + `access` across labs. The gateway maintainer ([@aparcar](https://github.com/aparcar)) must run the playbook after the PR is merged. Without this, SSH to the gateway VM (`labgrid-coordinator` SSH alias) fails with `Permission denied (publickey)`.
 
 ---
 
@@ -74,12 +61,12 @@ Host labgrid-* !labgrid-coordinator
 ```
 
 !!! warning "Avoid proxy loops"
-    The `!labgrid-coordinator` negation prevents the coordinator from matching the wildcard and creating a `ProxyJump` to itself (manifests as `banner exchange` timeouts or `UNKNOWN port 65535`).
+    The `!labgrid-coordinator` negation prevents the SSH gateway host from matching the wildcard and creating a `ProxyJump` to itself (manifests as `banner exchange` timeouts or `UNKNOWN port 65535`).
 
 Notes:
 
-- The coordinator endpoint (`195.37.88.188:51818`) is maintained by the upstream project. If connection is refused, ask upstream for the current IP/port.
-- The lab alias `labgrid-fcefyn` is resolved to its WireGuard IP by `/etc/hosts` on the coordinator. No `HostName` is needed in the wildcard block.
+- The SSH alias `labgrid-coordinator` points to the **SSH gateway VM** (not a labgrid-coordinator service). The endpoint (`195.37.88.188:51818`) is maintained by the upstream project.
+- The lab alias `labgrid-fcefyn` is resolved to its WireGuard IP by `/etc/hosts` on the gateway VM. No `HostName` is needed in the wildcard block.
 
 ---
 
@@ -115,7 +102,7 @@ git clone https://github.com/aparcar/openwrt-tests.git
 ```
 
 !!! info "Why both repos?"
-    **openwrt-tests** contains the shared `labnet.yaml` (device inventory, SSH keys) and vanilla OpenWrt tests. **libremesh-tests** contains LibreMesh-specific tests, FCEFyN target YAML, and mesh strategies. The test suite locates `labnet.yaml` automatically when both repos are siblings (`../openwrt-tests/labnet.yaml`).
+    **openwrt-tests** contains the shared `labnet.yaml` (device inventory, lab access lists) and vanilla OpenWrt tests. **libremesh-tests** contains LibreMesh-specific tests, FCEFyN target YAML, and mesh strategies. The test suite locates `labnet.yaml` automatically when both repos are siblings (`../openwrt-tests/labnet.yaml`).
 
     Alternatively, set `LABNET_PATH=/path/to/labnet.yaml` or `OPENWRT_TESTS_DIR=/path/to/openwrt-tests` if using a different directory layout.
 
@@ -165,6 +152,9 @@ export LG_PROXY=labgrid-fcefyn
 uv run labgrid-client who       # connected users
 uv run labgrid-client places    # available DUTs
 ```
+
+!!! note "Manual access follows reservations"
+    Serial console, `labgrid-client ssh`, and direct SSH to a DUT are for places that are free or reserved by the current developer. Do not access a DUT manually while a CI run or another remote developer holds that place.
 
 ### 6.2 Available DUTs
 
@@ -238,6 +228,8 @@ uv run labgrid-client console         # interactive serial console
 uv run labgrid-client --state shell console   # boot to shell + console
 ```
 
+These interactive commands assume `LG_PLACE` points to a place that is not reserved by CI or another remote developer, and that the current developer holds the corresponding reservation when required.
+
 Always unlock when done: `uv run labgrid-client unlock`.
 
 ---
@@ -284,12 +276,12 @@ sequenceDiagram
 
 | Component | Where | What |
 |-----------|-------|------|
-| `labgrid-coordinator` (SSH jump) | Upstream VM, port 51818 | SSH jump host to every lab (`ProxyJump`) |
-| `labgrid-coordinator` (gRPC) | Same VM, port 20408 | Place reservations (lock/unlock) over gRPC (Labgrid 25.0+, May 2025; earlier versions used WebSocket/WAMP) |
-| Exporter | Lab host | Publishes DUTs (serial, power, TFTP, SSH); connects outbound to the coordinator gRPC via WireGuard |
+| SSH gateway VM (SSH jump) | Upstream VM, port 51818 | SSH jump host to every lab (`ProxyJump`). Hostname `global-coordinator`. |
+| Lab coordinator (gRPC) | Each lab host, port 20408 (loopback) | Place reservations (lock/unlock) over gRPC (Labgrid 25.0+, May 2025). Reached by developers via `LG_PROXY` SSH tunnel. |
+| Exporter | Lab host | Publishes DUTs (serial, power, TFTP, SSH); connects to the local coordinator gRPC (loopback) |
 | `LG_PROXY` | Developer env var | Tells labgrid-client to tunnel gRPC and SSH through the ProxyJump chain |
 | `labgrid-dev` | Host user | Unprivileged account for developers |
-| `labnet.yaml` | [openwrt-tests](https://github.com/aparcar/openwrt-tests/blob/main/labnet.yaml) | Shared device inventory and SSH keys |
+| `labnet.yaml` | [openwrt-tests](https://github.com/aparcar/openwrt-tests/blob/main/labnet.yaml) | Shared device inventory and access lists (keys fetched from GitHub) |
 
 ZeroTier is **not** required for developer access. It is used only by lab admins (see [ZeroTier (admin-only)](zerotier-remote-access.md)).
 

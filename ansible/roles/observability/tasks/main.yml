@@ -241,6 +241,46 @@
   notify: Restart grafana
 
 # -------------------------------------------------------------------------
+# Grafana anonymous access — public read-only viewer (no login required)
+# -------------------------------------------------------------------------
+
+- name: Configure grafana.ini - anonymous auth enabled
+  community.general.ini_file:
+    path: /etc/grafana/grafana.ini
+    section: auth.anonymous
+    option: enabled
+    value: "{{ grafana_anonymous.enabled }}"
+    mode: "0640"
+  notify: Restart grafana
+
+- name: Configure grafana.ini - anonymous org_name
+  community.general.ini_file:
+    path: /etc/grafana/grafana.ini
+    section: auth.anonymous
+    option: org_name
+    value: "{{ grafana_anonymous.org_name }}"
+    mode: "0640"
+  notify: Restart grafana
+
+- name: Configure grafana.ini - anonymous org_role
+  community.general.ini_file:
+    path: /etc/grafana/grafana.ini
+    section: auth.anonymous
+    option: org_role
+    value: "{{ grafana_anonymous.org_role }}"
+    mode: "0640"
+  notify: Restart grafana
+
+- name: Configure grafana.ini - anonymous hide_version
+  community.general.ini_file:
+    path: /etc/grafana/grafana.ini
+    section: auth.anonymous
+    option: hide_version
+    value: "{{ grafana_anonymous.hide_version }}"
+    mode: "0640"
+  notify: Restart grafana
+
+# -------------------------------------------------------------------------
 # Orchestrator node exporter — metrics from the orchestration host itself
 # -------------------------------------------------------------------------
 # Listens only on 127.0.0.1 so metrics are not exposed on the lab LAN.
