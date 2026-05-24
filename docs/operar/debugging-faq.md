@@ -129,7 +129,7 @@ The GitHub API rate limit (60 req/hour unauthenticated) may have been hit. Wait 
 
 ### Card shows "Test details not yet published"
 
-`collect-lime-results.yml` (every 6 h) hasn't pulled the `report.xml` for that device/release yet, or the CI artifact failed to upload. Verify the `test-results-*` artifact exists on the run in `lime-packages` Actions, then trigger the collect workflow manually from this repo: **Actions → Collect lime-packages test results → Run workflow**.
+The `publish-results` job has not run yet, or `report.xml` failed to upload. Check the workflow run in GitHub Actions and verify the `test-results-*` artifact was created.
 
 ### Dashboard shows stale data after a new run
 

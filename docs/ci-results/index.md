@@ -40,11 +40,10 @@ The summary bar at the top shows aggregate counts across all tracked jobs:
 
 | Device | Place | Type | Releases |
 |--------|-------|------|---------|
-| Linksys E8450 (Belkin RT3200) | `belkin_rt3200_1` | Physical | 24.10.6 |
-| Linksys E8450 (Belkin RT3200) | `belkin_rt3200_2` | Physical | 24.10.6 |
-| Linksys E8450 (Belkin RT3200) | `belkin_rt3200_3` | Physical | 24.10.6 |
-| Banana Pi BPi-R4 | `bananapi_bpi-r4` | Physical | 24.10.6 |
-| OpenWrt One | `openwrt_one` | Physical | 24.10.6 |
-| 2-node and 3-node physical mesh | — | Mesh / Mesh pairs | 24.10.6 |
+| Linksys E8450 (Belkin RT3200) | `belkin_rt3200_1` | Physical | 24.10.6, 25.12.2 |
+| Linksys E8450 (Belkin RT3200) | `belkin_rt3200_2` | Physical | 24.10.6, 25.12.2 |
+| Linksys E8450 (Belkin RT3200) | `belkin_rt3200_3` | Physical | 24.10.6, 25.12.2 |
+| Banana Pi BPi-R4 | `bpi_r4_1` | Physical | 24.10.6, 25.12.2 |
+| OpenWrt One | `openwrt_one_1` | Physical | 24.10.6, 25.12.2 |
 | QEMU x86-64 | — | QEMU single | 24.10.6, 25.12.2 |
 | QEMU x86-64 | — | QEMU mesh | 24.10.6, 25.12.2 |
