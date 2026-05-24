@@ -2542,6 +2542,44 @@
         { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "node_network_up{job=\"orchestrator-host\",device=\"wg0\"}", "refId": "A" }
       ],
       "description": "Estado operativo de la interfaz wg0 (node_network_up)."
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 114 },
+      "id": 110,
+      "title": "NTP / time sync",
+      "type": "row",
+      "description": "Sincronía de tiempo del orchestrator: offset respecto al peer NTP."
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": null },
+            { "color": "yellow", "value": 0.05 },
+            { "color": "red",    "value": 0.5 }
+          ]},
+          "unit": "s",
+          "decimals": 4
+        }
+      },
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 115 },
+      "id": 111,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
+      },
+      "title": "NTP offset (s)",
+      "type": "stat",
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "node_timex_offset_seconds{job=\"orchestrator-host\"}", "refId": "A" }
+      ],
+      "description": "Diferencia (en segundos) entre el reloj local y el peer NTP, según el kernel timex. Verde < 50 ms; rojo > 500 ms (revisar chrony/ntpd)."
     }
   ],
   "refresh": "30s",
@@ -2563,5 +2601,5 @@
   "timezone": "browser",
   "title": "FCEFyN Testbed - Orchestrator Host",
   "uid": "fcefyn-orchestrator-node",
-  "version": 4
+  "version": 5
 }
