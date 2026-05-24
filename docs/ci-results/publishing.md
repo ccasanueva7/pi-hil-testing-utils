@@ -1,94 +1,68 @@
 # Publishing Test Results
 
-Test reports are pulled into this repository from `fcefyn-testbed/lime-packages` CI runs on a schedule, then served alongside the dashboard. Once published, the dashboard renders individual test-case details instead of "Test details not yet published".
+Test results are published automatically to this repository after each scheduled CI run in `lime-packages`. Once published, the dashboard shows individual test case details instead of "Test details not yet published".
 
 ## How it works
 
-The pipeline runs entirely from this repository — `lime-packages` does not need any changes. The `collect-lime-results.yml` workflow uses the GitHub Actions REST API to download `report.xml` artifacts from recent CI runs and commits them via an auto-merged PR.
+The `publish-results` job in `lime-packages/.github/workflows/build-firmware.yml` runs after all test jobs complete on the daily schedule (`0 6 * * *`):
 
 ```mermaid
 sequenceDiagram
-    participant Cron as Cron (every 6h)
-    participant Workflow as collect-lime-results.yml
-    participant LimeAPI as lime-packages Actions API
-    participant Bot as bot/lime-results branch
-    participant Develop as develop
-    participant Pages as GitHub Pages
+    participant CI as CI (lime-packages)
+    participant GHA as GitHub Actions Artifacts
+    participant Utils as fcefyn_testbed_utils
 
-    Cron->>Workflow: Trigger (schedule or workflow_dispatch)
-    Workflow->>LimeAPI: List recent build-firmware.yml + tests.yml runs<br/>(LIME_PACKAGES_TOKEN)
-    LimeAPI-->>Workflow: Run IDs and artifact metadata
-    Workflow->>LimeAPI: Download test-results-* artifact zips
-    Workflow->>Workflow: Extract report.xml and<br/>map artifact name → results path
-    Workflow->>Bot: peter-evans/create-pull-request<br/>(commits via API, BOT_PR_TOKEN)
-    Bot->>Develop: gh pr merge --auto --squash
-    Develop->>Pages: pages.yml builds + deploys
+    CI->>GHA: Upload test-results-* artifacts
+    CI->>CI: publish-results job starts
+    CI->>Utils: git checkout (develop, TESTBED_UTILS_TOKEN)
+    CI->>GHA: Download all test-results-* artifacts
+    CI->>Utils: Copy report.xml files to docs/ci-results/results/
+    CI->>Utils: git commit + push
+    Utils->>Utils: pages.yml triggers GitHub Pages deploy
 ```
-
-### Why this direction
-
-The original plan was for `lime-packages` to push its results into this repo after every CI run, but that requires a workflow change to land in `lime-packages` master — which the upstream LibreMesh project has not accepted. Inverting the direction (this repo pulls from there) means the integration ships on our side without any upstream coupling.
-
-## Artifact → results path mapping
-
-The collect workflow recognises these artifact name patterns produced by `lime-packages` CI and routes them to the layout the dashboard expects:
-
-| Artifact name | Destination |
-|--|--|
-| `test-results-unit` | `docs/ci-results/results/unit/report.xml` |
-| `test-results-qemu-single-{device}-{release}` | `docs/ci-results/results/qemu-single/{device}-{release}/report.xml` |
-| `test-results-qemu-mesh-{device}-{release}` | `docs/ci-results/results/qemu-mesh/{device}-{release}/report.xml` |
-| `test-results-mesh-pairs-{pair}-{release}` | `docs/ci-results/results/mesh-pairs/{pair}-{release}/report.xml` |
-| `test-results-mesh-{release}` | `docs/ci-results/results/mesh/{release}/report.xml` |
-| `test-results-{place}-{release}` | `docs/ci-results/results/physical/{place}-{release}/report.xml` |
-
-Already-collected reports are skipped, so re-running the workflow is idempotent and only picks up new runs.
 
 ## Results directory structure
 
 ```
 docs/ci-results/results/
-├── devices.json
+├── devices.json                                    # device registry
 ├── physical/
-│   ├── belkin_rt3200_1-24.10.6/report.xml
-│   ├── belkin_rt3200_2-24.10.6/report.xml
-│   ├── belkin_rt3200_3-24.10.6/report.xml
-│   ├── bananapi_bpi-r4-24.10.6/report.xml
-│   └── openwrt_one-24.10.6/report.xml
-├── mesh/
-│   └── 24.10.6/report.xml
-├── mesh-pairs/
-│   ├── 1-24.10.6/report.xml
-│   ├── 2-24.10.6/report.xml
-│   └── 3-24.10.6/report.xml
+│   ├── belkin_rt3200_1-24.10.6/
+│   │   └── report.xml
+│   ├── belkin_rt3200_2-24.10.6/
+│   │   └── report.xml
+│   ├── belkin_rt3200_3-24.10.6/
+│   │   └── report.xml
+│   ├── bpi_r4_1-24.10.6/
+│   │   └── report.xml
+│   ├── openwrt_one_1-24.10.6/
+│   │   └── report.xml
+│   ├── belkin_rt3200_1-25.12.2/
+│   │   └── report.xml
+│   ├── belkin_rt3200_2-25.12.2/
+│   │   └── report.xml
+│   ├── belkin_rt3200_3-25.12.2/
+│   │   └── report.xml
+│   ├── bpi_r4_1-25.12.2/
+│   │   └── report.xml
+│   └── openwrt_one_1-25.12.2/
+│       └── report.xml
 ├── qemu-single/
-│   ├── qemu_x86_64-24.10.6/report.xml
-│   └── qemu_x86_64-25.12.2/report.xml
+│   ├── qemu_x86_64-24.10.6/
+│   │   └── report.xml
+│   └── qemu_x86_64-25.12.2/
+│       └── report.xml
 └── qemu-mesh/
-    ├── qemu_x86_64-24.10.6/report.xml
-    └── qemu_x86_64-25.12.2/report.xml
+    ├── qemu_x86_64-24.10.6/
+    │   └── report.xml
+    └── qemu_x86_64-25.12.2/
+        └── report.xml
 ```
 
-## Required secrets
+## Required secret
 
-| Secret | Stored in | Purpose | Permissions |
-|--|--|--|--|
-| `LIME_PACKAGES_TOKEN` | `fcefyn_testbed_utils` | Read CI runs and download artifacts from `lime-packages` | Fine-grained PAT scoped to `fcefyn-testbed/lime-packages` with **Actions: Read** |
-| `BOT_PR_TOKEN` | `fcefyn_testbed_utils` | Open the auto-merged PR with the collected results | Fine-grained PAT scoped to `fcefyn-testbed/fcefyn_testbed_utils` with **Contents: Read and write** + **Pull requests: Read and write** |
-
-## Repository settings required
-
-These need to be enabled once for the auto-merge step to work:
-
-- **Settings → Actions → General → Workflow permissions** → "Allow GitHub Actions to create and approve pull requests" (toggled via the `BOT_PR_TOKEN`, but the repo-level toggle must also be on)
-- **Settings → General → Pull Requests** → "Allow auto-merge"
-- **`develop` branch protection** → keep "Require signed commits" **off** (PRs created via the GitHub API with a user PAT are not auto-signed by GitHub; enabling this would block the bot)
+The publish pipeline requires a fine-grained PAT stored as `TESTBED_UTILS_TOKEN` in `lime-packages` repository secrets, with `Contents: Read and write` permission on this repository.
 
 ## Triggering manually
 
-To force an immediate collection (e.g. after a fresh CI run in `lime-packages`):
-
-1. Go to **Actions → Collect lime-packages test results**.
-2. **Run workflow** → branch `develop` → optionally set `runs` (how many recent CI runs to scan, default 10).
-
-A bot PR (`bot/lime-results`) appears and auto-merges as soon as required checks pass. If there are no new reports the workflow exits cleanly without opening a PR.
+To publish results outside the daily schedule, trigger `build-firmware.yml` via `workflow_dispatch` — the `publish-results` job runs after the test jobs complete.
