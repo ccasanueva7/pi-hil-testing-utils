@@ -106,3 +106,12 @@ grafana_config:
   cookie_secure: "true"
   cookie_samesite: "lax"
   allow_sign_up: "false"
+
+# Anonymous access: let anyone browse dashboards as read-only Viewer
+# without logging in. No VPS changes needed; Grafana handles auth.
+# Set enabled: false to revert to login-only access.
+grafana_anonymous:
+  enabled: "true"
+  org_name: "Main Org."
+  org_role: "Viewer"
+  hide_version: "true"

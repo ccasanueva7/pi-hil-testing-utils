@@ -88,6 +88,8 @@ nav:
       - Adding a DUT: operar/dut-onboarding.md
       - Belkin U-Boot TFTP — PC Ethernet IP: operar/belkin-uboot-tftp-pc-network.md
       - Build firmware: operar/build-firmware-manual.md
+      - "CI: Build & Test": operar/ci-build-and-test.md
+      - Virtual mesh (local): operar/virtual-mesh-local.md
       - DUT provisioning (full): operar/provision-dut.md
       - DUT exporter setup: operar/setup-dut-exporter.md
       - Mesh IP provisioning: operar/provision-mesh-ip.md

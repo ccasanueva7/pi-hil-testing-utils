@@ -78,12 +78,13 @@ VPS, Certbot, and tunnel unit: [grafana-public-access.md](grafana-public-access.
 
 ## Grafana dashboards
 
-Two dashboards:
+Three dashboards:
 
 | Dashboard | Source | Description |
 |-----------|--------|---------------|
+| **FCEFyN Testbed - Lab Overview** | Provisioned (JSON in repo) | Lab-wide view: every DUT and the gateway at a glance. Single-row stat panels (scrape `up`, uptime, CPU %, RAM %) plus a consolidated table and a firmware/target table. Uses `dut=~".+"` selectors so the whole fleet renders without picking a device. |
 | **FCEFyN Testbed - DUTs & gateway** | Provisioned (JSON in repo) | DUTs + WDR3500 gateway. **device** variable with `label_values(up{dut!="lab-orchestrator"}, dut)`: **does not** include the orchestration host. All queries use `dut="$device"` and datasource `uid: prometheus`. |
-| **FCEFyN Testbed - Orchestrator Host** | Provisioned (JSON in repo) | Orchestration host (~30 panels). Job `orchestrator-host`, label `dut=lab-orchestrator`. |
+| **FCEFyN Testbed - Orchestrator Host** | Provisioned (JSON in repo) | Orchestration host (~40 panels). Job `orchestrator-host`, label `dut=lab-orchestrator`. |
 
 ### DUTs & gateway dashboard sections
 
@@ -93,11 +94,24 @@ Two dashboards:
 | Device info | Instant tables `node_uname_info`, `node_openwrt_info` |
 | CPU & load | CPU by mode (stacked), load 1/5/15m |
 | Memory | Total / available / used |
-| Network | Traffic and packets per interface (excluding `lo`) |
+| Network | Traffic and packets per interface (excluding `lo`); plus a per-interface errors and drops panel with `rate(node_network_{receive,transmit}_{errs,drop}_total[2m])` |
 | Disk | Usage % per mountpoint, free space |
 | Temperature | `node_hwmon_temp_celsius`, `node_thermal_zone_temp`, CPU stats / max / ieee80211 radios |
 | Wi-Fi | `wifi_network_*` (AP), `wifi_stations` / `wifi_station_signal_dbm` (stations, if opkg packages present) |
 | Labels | Table of scrape labels (`firmware`, `target`, etc.) from `up{dut="$device"}` |
+
+### Lab Overview dashboard sections
+
+This dashboard has no `device` variable — every panel iterates over all DUTs at once using `dut=~".+"`. Useful for a quick glance at the whole fleet.
+
+| Section | Panels |
+|---------|--------|
+| Device health at a glance | `up{dut=~".+"}` rendered as one stat-card per device with UP/DOWN value mapping |
+| Uptime | `node_time_seconds - node_boot_time_seconds`, color-thresholded green→yellow→orange |
+| CPU | `100 - avg(rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100` per DUT |
+| Memory | `100 - MemAvailable / MemTotal * 100` per DUT |
+| Device table | One row per DUT consolidating scrape status, uptime, CPU %, RAM % via `merge` + `organize` transformations |
+| Firmware & target | Instant table of `node_openwrt_info{dut=~".+"}` with labels-to-fields, surfacing the `firmware` and `target` labels set in the scrape config |
 
 ### Orchestrator Host dashboard sections
 
@@ -111,6 +125,8 @@ Two dashboards:
 | Network - Physical | Bandwidth (bps), Packets/s, Errors & Drops, TCP Connections |
 | Network - VLANs | Bandwidth and packets for vlan100-108, vlan200 (collapsible) |
 | System Internals | File Descriptors, Entropy, Sockets by Protocol, Systemd Units (active/failed), Socket Memory |
+| Lab Services | Active/inactive stats for `labgrid-exporter.service`, `pdudaemon.service`, `ser2net.service` plus a state-timeline showing transitions over the selected range. Source: `node_systemd_unit_state{job="orchestrator-host",name=…,state="active"}`. |
+| WireGuard (wg0) | Tunnel bandwidth (rx positive, tx negative), packet rate, error rate, and a UP/DOWN pill from `node_network_up{device="wg0"}`. Same metrics any other ethernet device reports, just filtered to the tunnel. |
 
 For **orchestration host only** metrics, always use **Orchestrator Host**; the DUT dashboard excludes it on purpose from the **device** dropdown.
 
@@ -299,3 +315,4 @@ Paths are relative to the repository root.
 | `ansible/roles/observability/templates/grafana-dashboards-provider.yml.j2` | File-based dashboard provider in Grafana |
 | `ansible/roles/observability/files/dashboards/orchestrator-node.json` | Orchestrator host dashboard JSON |
 | `ansible/roles/observability/files/dashboards/duts-node.json` | DUTs + gateway dashboard JSON (variable excludes `lab-orchestrator`) |
+| `ansible/roles/observability/files/dashboards/lab-overview.json` | Lab-wide overview dashboard JSON (every DUT in one screen) |

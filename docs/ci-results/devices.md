@@ -69,13 +69,17 @@ The dashboard recognises the following CI job name patterns and maps them to typ
 | `physical-belkin_rt3200_1-24.10.6` | `linksys_e8450` | `belkin_rt3200_1` | 24.10.6 |
 | `physical-belkin_rt3200_2-24.10.6` | `linksys_e8450` | `belkin_rt3200_2` | 24.10.6 |
 | `physical-belkin_rt3200_3-24.10.6` | `linksys_e8450` | `belkin_rt3200_3` | 24.10.6 |
-| `physical-bpi_r4_1-24.10.6` | `bananapi_bpi-r4` | `bpi_r4_1` | 24.10.6 |
-| `physical-openwrt_one_1-24.10.6` | `openwrt_one` | `openwrt_one_1` | 24.10.6 |
-| `physical-belkin_rt3200_1-25.12.2` | `linksys_e8450` | `belkin_rt3200_1` | 25.12.2 |
-| `physical-belkin_rt3200_2-25.12.2` | `linksys_e8450` | `belkin_rt3200_2` | 25.12.2 |
-| `physical-belkin_rt3200_3-25.12.2` | `linksys_e8450` | `belkin_rt3200_3` | 25.12.2 |
-| `physical-bpi_r4_1-25.12.2` | `bananapi_bpi-r4` | `bpi_r4_1` | 25.12.2 |
-| `physical-openwrt_one_1-25.12.2` | `openwrt_one` | `openwrt_one_1` | 25.12.2 |
+| `physical-bananapi_bpi-r4-24.10.6` | `bananapi_bpi-r4` | `bananapi_bpi-r4` | 24.10.6 |
+| `physical-openwrt_one-24.10.6` | `openwrt_one` | `openwrt_one` | 24.10.6 |
+
+### Physical mesh
+
+| ID | Type | Release |
+|----|------|---------|
+| `physical-mesh-24.10.6` | Multi-node mesh (N=2 or N=3 from `prepare_matrix.sh`) | 24.10.6 |
+| `mesh-pair-1-24.10.6` | Pair #1 — `openwrt_one + bananapi_bpi-r4` | 24.10.6 |
+| `mesh-pair-2-24.10.6` | Pair #2 — `openwrt_one + belkin_rt3200_2` | 24.10.6 |
+| `mesh-pair-3-24.10.6` | Pair #3 — `bananapi_bpi-r4 + belkin_rt3200_2` | 24.10.6 |
 
 ### QEMU
 
@@ -88,6 +92,6 @@ The dashboard recognises the following CI job name patterns and maps them to typ
 
 ## Adding a new device
 
-1. Add the device to `targets.yml` in `lime-packages` with `test_firmware: true` and the corresponding `test_places` entry
+1. Add the device to `targets.yml` in `lime-packages` with `test_firmware: true` (and `test_places` if the labgrid place name differs from the device name)
 2. Add an entry to `devices.json` with the correct `id`, `place`, `release`, and `results_path`
-3. The CI publish pipeline will start populating `report.xml` after the next scheduled run
+3. The next scheduled run of `collect-lime-results.yml` (every 6h) will start pulling the new `report.xml`; trigger it manually if you don't want to wait

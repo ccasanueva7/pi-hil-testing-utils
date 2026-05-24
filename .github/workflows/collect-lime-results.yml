@@ -22,6 +22,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: collect-lime-results
@@ -124,16 +125,38 @@ jobs:
           echo "Collected $new_files new report.xml file(s)."
           echo "NEW_FILES=$new_files" >> "$GITHUB_ENV"
 
-      - name: Commit and push results
+      # `develop` is protected (signed commits required, PRs only), so we
+      # cannot push directly from the bot. Open a PR with API-signed
+      # commits via peter-evans/create-pull-request and auto-merge it.
+      - name: Create PR with collected results
         if: env.NEW_FILES != '0'
+        id: cpr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.BOT_PR_TOKEN }}
+          base: develop
+          branch: bot/lime-results
+          delete-branch: true
+          sign-commits: true
+          commit-message: |
+            ci: collect lime-packages test results (${{ env.NEW_FILES }} new)
+          title: 'ci: collect lime-packages test results'
+          body: |
+            Automated PR with ${{ env.NEW_FILES }} freshly downloaded `report.xml`
+            file(s) from `fcefyn-testbed/lime-packages` CI artifacts.
+
+            Triggered by the `Collect lime-packages test results` workflow.
+          labels: |
+            ci
+            automated
+          add-paths: |
+            docs/ci-results/results/
+
+      - name: Enable auto-merge
+        if: steps.cpr.outputs.pull-request-number
+        env:
+          GH_TOKEN: ${{ secrets.BOT_PR_TOKEN }}
         run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/ci-results/results/
-          if git diff --cached --quiet; then
-            echo "Nothing to commit."
-            exit 0
-          fi
-          git commit -m "ci: collect lime-packages test results ($NEW_FILES new)"
-          git push origin develop
+          gh pr merge --auto --squash \
+            --repo "${{ github.repository }}" \
+            "${{ steps.cpr.outputs.pull-request-number }}"
