@@ -52,15 +52,23 @@ Each test function connects, runs commands, asserts results.
 
 pytest generates a JUnit XML report (`--junitxml report.xml`) and uploads it as a GitHub Actions artifact (`test-results-PLACE-RELEASE`).
 
-### 7. publish-results job
+### 7. Results pulled into the dashboard
 
-After all test jobs complete, `publish-results` runs:
+There is no publish step inside `lime-packages`. Instead, the
+`collect-lime-results.yml` workflow in `fcefyn_testbed_utils` runs every
+6 h (or on `workflow_dispatch`) and:
 
-1. Checks out `fcefyn_testbed_utils` (via `TESTBED_UTILS_TOKEN`)
-2. Downloads all `test-results-*` artifacts
-3. Copies each `report.xml` to `docs/ci-results/results/{type}/{place}-{release}/`
-4. Commits and pushes to `develop`
+1. Lists recent runs of `build-firmware.yml` (and `tests.yml`) via the
+   GitHub Actions REST API, using `LIME_PACKAGES_TOKEN`
+2. Downloads each `test-results-*` artifact and extracts `report.xml`
+3. Maps the artifact name to the dashboard's expected path
+   (`docs/ci-results/results/{type}/{identifier}/report.xml`)
+4. Opens an auto-merged bot PR onto `develop` with `BOT_PR_TOKEN`
+   (`peter-evans/create-pull-request` + `gh pr merge --auto --squash`)
 5. `pages.yml` deploys the updated site to GitHub Pages
+
+See [Publishing results](../ci-results/publishing.md) for the full
+diagram and required secrets.
 
 ### 8. Dashboard updates
 
@@ -121,6 +129,6 @@ sequenceDiagram
     Runner->>DUT: run tests (SSH proxy)
     Runner->>GH: upload report.xml artifact
     Runner->>Coord: unlock place
-    GH->>GH: publish-results job
+    Note over GH: collect-lime-results.yml<br/>(in fcefyn_testbed_utils, every 6h)<br/>pulls artifact and opens bot PR
     GH->>GH: pages.yml deploy
 ```

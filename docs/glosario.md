@@ -4,6 +4,9 @@ Key terms used across the FCEFyN testbed documentation.
 
 ---
 
+**auto-merge**
+: A GitHub Pull Request setting that merges the PR automatically as soon as all required reviews and status checks pass. The CI results pipeline relies on it so the bot PR opened by `collect-lime-results.yml` lands on `develop` without manual intervention. Requires the repo-level "Allow auto-merge" toggle to be on.
+
 **batman-adv**
 : B.A.T.M.A.N. Advanced — a mesh routing protocol implemented as a Linux kernel module. Operates at Layer 2, handling frame forwarding between mesh nodes. Used by LibreMesh for L2 mesh connectivity.
 
@@ -34,11 +37,20 @@ Key terms used across the FCEFyN testbed documentation.
 **mac80211_hwsim**
 : A Linux kernel module that creates virtual IEEE 802.11 (WiFi) radios. Used in combination with vwifi to simulate WiFi connectivity between QEMU VMs without physical hardware.
 
+**node_openwrt_info**
+: A Prometheus metric exported by node_exporter (with custom textfile collector or scrape labels) on each DUT, carrying `firmware` and `target` as labels so the Lab Overview dashboard can show what's running on each device.
+
+**node_systemd_unit_state**
+: A node_exporter metric describing whether a systemd unit is in a given state (`active`, `failed`, `inactive`, …). Used by the Orchestrator Host dashboard's Lab Services section to assert that `labgrid-exporter.service`, `pdudaemon.service`, and `ser2net.service` are running.
+
 **openwrt-tests**
 : The test suite and pytest infrastructure (in `lime-packages`) that defines the test cases for both physical DUTs and virtual mesh nodes.
 
 **pdudaemon**
 : A daemon that controls power to DUTs via relay boards or PDUs. Exposes an HTTP API. The lab uses an Arduino + SSR relay board controlled by pdudaemon.
+
+**PAT (Personal Access Token)**
+: A GitHub credential scoped per user. The CI results pipeline uses two fine-grained PATs as repository secrets in `fcefyn_testbed_utils`: `LIME_PACKAGES_TOKEN` (Actions: Read on `lime-packages`, for downloading artifacts) and `BOT_PR_TOKEN` (Contents + Pull Requests: Write on this repo, for opening the auto-merged bot PR).
 
 **place**
 : A Labgrid concept representing one testable resource (a DUT with all its attached resources). A place has a name (e.g. `labgrid-fcefyn-belkin_rt3200_1`) and is registered with the coordinator.
