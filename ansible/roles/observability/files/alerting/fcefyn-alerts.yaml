@@ -161,45 +161,6 @@ groups:
                     type: last
 
       # -----------------------------------------------------------------------
-      # High temperature
-      # Only fires on devices that actually expose hwmon sensors.
-      # -----------------------------------------------------------------------
-      - uid: fcefyn-high-temp
-        title: High temperature
-        condition: C
-        for: 2m
-        annotations:
-          summary: "High temperature on {{ $labels.instance }} ({{ $labels.chip }})"
-          description: "Temperature sensor above 80°C for more than 2 minutes."
-        labels:
-          severity: warning
-        data:
-          - refId: A
-            relativeTimeRange:
-              from: 300
-              to: 0
-            datasourceUid: prometheus
-            model:
-              expr: "node_hwmon_temp_celsius > 80"
-              instant: true
-              refId: A
-          - refId: C
-            datasourceUid: __expr__
-            model:
-              type: classic_conditions
-              refId: C
-              conditions:
-                - evaluator:
-                    type: gt
-                    params: [0]
-                  operator:
-                    type: and
-                  query:
-                    params: [A]
-                  reducer:
-                    type: last
-
-      # -----------------------------------------------------------------------
       # DUT metrics tunnel down
       # Checks that autossh tunnel units are not in failed state.
       # Metric comes from the orchestrator's node_exporter.
