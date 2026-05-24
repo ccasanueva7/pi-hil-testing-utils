@@ -53,7 +53,7 @@ Use the **release dropdown** to filter cards by OpenWrt release (e.g. `24.10.6`,
 
 ### By name
 
-The **search box** filters by device name or place as you type (e.g. `belkin`, `bpi`, `qemu`, `25.12`).
+The **search box** filters by device name or place as you type (e.g. `belkin`, `bananapi`, `openwrt`, `qemu`, `25.12`).
 
 All three filters (type tab, release dropdown, search) apply simultaneously.
 
