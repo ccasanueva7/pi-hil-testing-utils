@@ -297,6 +297,45 @@
         { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "node_load1{dut=~\".+\"}", "legendFormat": "{{dut}}", "refId": "A" }
       ],
       "description": "node_load1: tareas runnable + en uninterruptible sleep, promediadas en el último minuto. Útil para detectar DUTs trabajando bajo presión incluso si el % CPU instantáneo está bajo."
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 51 },
+      "id": 70,
+      "title": "Swap",
+      "type": "row",
+      "description": "Uso de swap por DUT. En OpenWrt habitualmente debería estar en 0%; cualquier swap suele indicar memoria comprometida."
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": null },
+            { "color": "yellow", "value": 1 },
+            { "color": "red",    "value": 25 }
+          ]},
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      },
+      "gridPos": { "h": 5, "w": 24, "x": 0, "y": 52 },
+      "id": 71,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
+      },
+      "title": "Swap used per device",
+      "type": "stat",
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "100 * (node_memory_SwapTotal_bytes{dut=~\".+\"} - node_memory_SwapFree_bytes{dut=~\".+\"}) / clamp_min(node_memory_SwapTotal_bytes{dut=~\".+\"}, 1)", "legendFormat": "{{dut}}", "refId": "A" }
+      ],
+      "description": "Porcentaje de swap utilizado por cada DUT. En OpenWrt normalmente no hay swap configurado: este panel mostraría 0% (o NaN si no hay zswap/zram), y cualquier valor distinto suele ser síntoma de presión de memoria."
     }
   ],
   "refresh": "30s",
