@@ -8,7 +8,7 @@ Key terms used across the FCEFyN testbed documentation.
 : A GitHub Pull Request setting that merges the PR automatically as soon as all required reviews and status checks pass. The CI results pipeline relies on it so the bot PR opened by `collect-lime-results.yml` lands on `develop` without manual intervention. Requires the repo-level "Allow auto-merge" toggle to be on.
 
 **autossh**
-: Wrapper alrededor de `ssh` que monitorea la conexión y la levanta de vuelta cuando se cae. El lab lo usa para mantener los túneles SSH desde el host al puerto del exporter de cada DUT (`dut-metrics-tunnel-<name>.service`), de modo que si la VLAN del DUT cambia durante un test, Prometheus recupera el scrape sin intervención.
+: An `ssh` wrapper that monitors the connection and brings it back up when it drops. The lab uses it to keep the SSH tunnels from the host to each DUT's exporter port (`dut-metrics-tunnel-<name>.service`), so when the DUT's VLAN changes during a test, Prometheus recovers the scrape without intervention.
 
 **batman-adv**
 : B.A.T.M.A.N. Advanced — a mesh routing protocol implemented as a Linux kernel module. Operates at Layer 2, handling frame forwarding between mesh nodes. Used by LibreMesh for L2 mesh connectivity.
@@ -20,10 +20,10 @@ Key terms used across the FCEFyN testbed documentation.
 : CLI de batman-adv. `batctl n` lista vecinos, `batctl o` la tabla de originadores, `batctl if` muestra qué interfaces hardware están unidas al mesh. Los tests `test_mesh.py` lo usan para validar que la malla efectivamente se formó.
 
 **conntrack**
-: Tabla del kernel Linux que trackea conexiones de red (TCP, UDP, etc.) — la usa Netfilter para NAT y stateful filtering. En el orchestrator se llena rápido por los túneles `autossh` y los SSH-proxies de labgrid; cuando se acerca al límite (`node_nf_conntrack_entries_limit`), los flujos nuevos empiezan a descartarse.
+: Linux kernel table that tracks network connections (TCP, UDP, etc.) — Netfilter uses it for NAT and stateful filtering. On the orchestrator it fills quickly because of `autossh` tunnels and labgrid SSH proxies; once it approaches the limit (`node_nf_conntrack_entries_limit`), new flows start being dropped.
 
 **dnsmasq**
-: Servidor liviano que combina DHCP, DNS y TFTP. El lab lo usa para servir las imágenes initramfs por TFTP a los DUTs al bootear, y como DHCP en algunas VLANs aisladas.
+: Lightweight server that combines DHCP, DNS, and TFTP. The lab uses it to serve initramfs images to DUTs over TFTP at boot, and as DHCP server on some isolated VLANs.
 
 **DUT** (Device Under Test)
 : A physical router connected to the lab and managed by Labgrid. Each DUT has a place name (e.g. `belkin_rt3200_1`), a VLAN, serial console, and power control.
