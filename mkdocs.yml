@@ -79,6 +79,10 @@ nav:
   - Home: index.md
   - Lab operations:
       - Developer quickstart: operar/developer-remote-access.md
+      - Researcher onboarding: operar/researcher-onboarding.md
+      - Pre-test sanity check: operar/pre-test-checklist.md
+      - After-reboot recovery: operar/after-reboot-recovery.md
+      - Collecting failure logs: operar/collect-failure-logs.md
       - Running tests: operar/lab-running-tests.md
       - SSH access to DUTs: operar/dut-ssh-access.md
       - Labgrid commands: operar/labgrid-useful-commands.md
