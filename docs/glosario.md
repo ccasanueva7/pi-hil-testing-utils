@@ -106,6 +106,9 @@ Key terms used across the FCEFyN testbed documentation.
 **shared-state**
 : A LibreMesh subsystem that synchronizes structured data (e.g. hostname→MAC mappings) between mesh nodes. Tests verify that data written on one node propagates to others.
 
+**sysupgrade**
+: Utilidad de OpenWrt para flashear una imagen nueva preservando (o no, con `-n`) la configuración UCI. En los tests de CI **no se usa**: las imágenes se cargan vía TFTP en RAM (initramfs), nunca se escribe la flash, así el DUT queda en el mismo estado tras cada test.
+
 **TFTP**
 : Trivial File Transfer Protocol. Used to deliver the initramfs kernel image to DUTs at boot via the lab's dnsmasq TFTP server.
 
