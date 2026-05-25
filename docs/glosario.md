@@ -77,13 +77,13 @@ Key terms used across the FCEFyN testbed documentation.
 : Protocol for synchronising the system clock with trusted time peers. The orchestrator uses whatever time daemon the OS provides (systemd-timesyncd by default, chrony if installed) to keep the clock aligned. The Orchestrator Host dashboard's "NTP offset" panel reads `node_timex_offset_seconds`, a kernel-timex metric that works regardless of which daemon is running.
 
 **opkg / apk**
-: Gestores de paquetes de OpenWrt. `opkg` se usa en releases 24.10.x y anteriores (paquetes `.ipk`); `apk` (apk-tools 3.x) reemplazó a opkg desde 25.12.x con paquetes `.apk` y un índice binario `packages.adb`. El CI tiene que branchear por formato porque las flags de `make image` cambian.
+: OpenWrt package managers. `opkg` is used in 24.10.x and earlier (`.ipk` packages); `apk` (apk-tools 3.x) replaced opkg starting in 25.12.x with `.apk` packages and a binary index `packages.adb`. The CI has to branch on the format because the `make image` flags differ.
 
 **openwrt-tests**
 : The test suite and pytest infrastructure (in `lime-packages`) that defines the test cases for both physical DUTs and virtual mesh nodes.
 
 **OpenWrt SDK**
-: Conjunto de toolchains precompilados (uno por arquitectura) que permite compilar paquetes OpenWrt fuera del buildroot completo. El stage `build-feed` del CI lo usa vía `openwrt/gh-action-sdk@v9` para producir los `.ipk` / `.apk` del feed de lime-packages.
+: Pre-compiled toolchain set (one per architecture) that lets you compile OpenWrt packages without the full buildroot. The CI's `build-feed` stage uses it via `openwrt/gh-action-sdk@v9` to produce the `.ipk` / `.apk` files for the lime-packages feed.
 
 **pdudaemon**
 : A daemon that controls power to DUTs via relay boards or PDUs. Exposes an HTTP API. The lab uses an Arduino + SSR relay board controlled by pdudaemon.
@@ -95,7 +95,7 @@ Key terms used across the FCEFyN testbed documentation.
 : A Labgrid concept representing one testable resource (a DUT with all its attached resources). A place has a name (e.g. `labgrid-fcefyn-belkin_rt3200_1`) and is registered with the coordinator.
 
 **prometheus-node-exporter-lua**
-: Reimplementación en Lua de node_exporter, mucho más liviana, pensada para OpenWrt (donde la versión Go no entraría en flash). Los DUTs la corren escuchando en loopback (127.0.0.1:9100); el host la consume vía autossh tunnel.
+: A Lua reimplementation of node_exporter, much lighter, designed for OpenWrt (where the Go version would not fit in flash). DUTs run it bound to loopback (`127.0.0.1:9100`); the host scrapes it through an autossh tunnel.
 
 **QEMU**
 : An open-source machine emulator. Used to run LibreMesh x86_64 firmware images as virtual machines for CI mesh tests without physical hardware.
