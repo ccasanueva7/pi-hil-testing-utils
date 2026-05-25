@@ -22,6 +22,9 @@ Key terms used across the FCEFyN testbed documentation.
 **conntrack**
 : Tabla del kernel Linux que trackea conexiones de red (TCP, UDP, etc.) — la usa Netfilter para NAT y stateful filtering. En el orchestrator se llena rápido por los túneles `autossh` y los SSH-proxies de labgrid; cuando se acerca al límite (`node_nf_conntrack_entries_limit`), los flujos nuevos empiezan a descartarse.
 
+**dnsmasq**
+: Servidor liviano que combina DHCP, DNS y TFTP. El lab lo usa para servir las imágenes initramfs por TFTP a los DUTs al bootear, y como DHCP en algunas VLANs aisladas.
+
 **DUT** (Device Under Test)
 : A physical router connected to the lab and managed by Labgrid. Each DUT has a place name (e.g. `belkin_rt3200_1`), a VLAN, serial console, and power control.
 
