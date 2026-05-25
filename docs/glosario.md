@@ -76,6 +76,9 @@ Key terms used across the FCEFyN testbed documentation.
 **openwrt-tests**
 : The test suite and pytest infrastructure (in `lime-packages`) that defines the test cases for both physical DUTs and virtual mesh nodes.
 
+**OpenWrt SDK**
+: Conjunto de toolchains precompilados (uno por arquitectura) que permite compilar paquetes OpenWrt fuera del buildroot completo. El stage `build-feed` del CI lo usa vía `openwrt/gh-action-sdk@v9` para producir los `.ipk` / `.apk` del feed de lime-packages.
+
 **pdudaemon**
 : A daemon that controls power to DUTs via relay boards or PDUs. Exposes an HTTP API. The lab uses an Arduino + SSR relay board controlled by pdudaemon.
 
