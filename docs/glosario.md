@@ -16,6 +16,9 @@ Key terms used across the FCEFyN testbed documentation.
 **babeld**
 : A distance-vector routing daemon implementing the Babel routing protocol (RFC 8966). Used by LibreMesh for IPv4/IPv6 routing on top of the batman-adv mesh.
 
+**batctl**
+: CLI de batman-adv. `batctl n` lista vecinos, `batctl o` la tabla de originadores, `batctl if` muestra qué interfaces hardware están unidas al mesh. Los tests `test_mesh.py` lo usan para validar que la malla efectivamente se formó.
+
 **DUT** (Device Under Test)
 : A physical router connected to the lab and managed by Labgrid. Each DUT has a place name (e.g. `belkin_rt3200_1`), a VLAN, serial console, and power control.
 
