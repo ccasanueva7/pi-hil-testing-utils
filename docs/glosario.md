@@ -40,6 +40,9 @@ Key terms used across the FCEFyN testbed documentation.
 **FIT image (Flattened Image Tree)**
 : Formato de imagen que U-Boot puede bootear: combina kernel, DTB y ramdisk en un único `.itb`. El pipeline de lime-packages genera FIT para los targets Mediatek (Belkin RT3200, BPi-R4, OpenWrt One) e inyecta `bootargs` para que U-Boot use el initramfs en RAM.
 
+**iperf3**
+: Herramienta de medición de throughput TCP/UDP. Los tests virtual-mesh la usan (cuando está instalada en la imagen) para medir el ancho de banda entre nodos del mesh.
+
 **JUnit XML**
 : A standard XML format for test results, originally from the Java JUnit framework. pytest generates JUnit XML with `--junitxml`. The dashboard parses these files to show per-test-case results.
 
