@@ -37,6 +37,9 @@ Key terms used across the FCEFyN testbed documentation.
 **initramfs**
 : An in-memory root filesystem loaded by the kernel at boot. Used for CI testing because the device boots from RAM via TFTP — no flash write occurs. The device returns to its previous state on power cycle.
 
+**FIT image (Flattened Image Tree)**
+: Formato de imagen que U-Boot puede bootear: combina kernel, DTB y ramdisk en un único `.itb`. El pipeline de lime-packages genera FIT para los targets Mediatek (Belkin RT3200, BPi-R4, OpenWrt One) e inyecta `bootargs` para que U-Boot use el initramfs en RAM.
+
 **JUnit XML**
 : A standard XML format for test results, originally from the Java JUnit framework. pytest generates JUnit XML with `--junitxml`. The dashboard parses these files to show per-test-case results.
 
