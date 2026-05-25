@@ -28,6 +28,9 @@ Key terms used across the FCEFyN testbed documentation.
 **DUT** (Device Under Test)
 : A physical router connected to the lab and managed by Labgrid. Each DUT has a place name (e.g. `belkin_rt3200_1`), a VLAN, serial console, and power control.
 
+**dropbear**
+: Servidor SSH liviano que viene por default en OpenWrt. Los tests SSH-ean a los DUTs vía dropbear; `test_dropbear_startup` espera hasta 120 s a que el daemon esté escuchando en `0.0.0.0:22` antes de declarar el DUT listo.
+
 **initramfs**
 : An in-memory root filesystem loaded by the kernel at boot. Used for CI testing because the device boots from RAM via TFTP — no flash write occurs. The device returns to its previous state on power cycle.
 
