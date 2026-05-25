@@ -67,6 +67,9 @@ Key terms used across the FCEFyN testbed documentation.
 **node_systemd_unit_state**
 : A node_exporter metric describing whether a systemd unit is in a given state (`active`, `failed`, `inactive`, …). Used by the Orchestrator Host dashboard's Lab Services section to assert that `labgrid-exporter.service`, `pdudaemon.service`, and `ser2net.service` are running.
 
+**NTP (Network Time Protocol)**
+: Protocolo para sincronizar el reloj del sistema contra peers de tiempo confiables. El orchestrator usa el daemon de tiempo del SO (systemd-timesyncd por default, o chrony si se instala) para mantener el clock alineado. El panel "NTP offset" del dashboard Orchestrator Host monitorea el desvío vía `node_timex_offset_seconds`, métrica que viene del kernel timex y funciona sin importar qué daemon esté corriendo.
+
 **openwrt-tests**
 : The test suite and pytest infrastructure (in `lime-packages`) that defines the test cases for both physical DUTs and virtual mesh nodes.
 
