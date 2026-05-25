@@ -31,6 +31,9 @@ Key terms used across the FCEFyN testbed documentation.
 **dropbear**
 : Servidor SSH liviano que viene por default en OpenWrt. Los tests SSH-ean a los DUTs vía dropbear; `test_dropbear_startup` espera hasta 120 s a que el daemon esté escuchando en `0.0.0.0:22` antes de declarar el DUT listo.
 
+**DTB (Device Tree Blob)**
+: Archivo binario compilado a partir de un `.dts` (Device Tree Source). Describe el hardware al kernel Linux (memoria, CPUs, periféricos, particiones MTD). El pipeline de CI parcha DTBs para inyectar MAC OEM o forzar el layout SPI-NAND legacy en Belkin RT3200.
+
 **initramfs**
 : An in-memory root filesystem loaded by the kernel at boot. Used for CI testing because the device boots from RAM via TFTP — no flash write occurs. The device returns to its previous state on power cycle.
 
