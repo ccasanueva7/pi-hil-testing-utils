@@ -70,6 +70,9 @@ Key terms used across the FCEFyN testbed documentation.
 **NTP (Network Time Protocol)**
 : Protocolo para sincronizar el reloj del sistema contra peers de tiempo confiables. El orchestrator usa el daemon de tiempo del SO (systemd-timesyncd por default, o chrony si se instala) para mantener el clock alineado. El panel "NTP offset" del dashboard Orchestrator Host monitorea el desvío vía `node_timex_offset_seconds`, métrica que viene del kernel timex y funciona sin importar qué daemon esté corriendo.
 
+**opkg / apk**
+: Gestores de paquetes de OpenWrt. `opkg` se usa en releases 24.10.x y anteriores (paquetes `.ipk`); `apk` (apk-tools 3.x) reemplazó a opkg desde 25.12.x con paquetes `.apk` y un índice binario `packages.adb`. El CI tiene que branchear por formato porque las flags de `make image` cambian.
+
 **openwrt-tests**
 : The test suite and pytest infrastructure (in `lime-packages`) that defines the test cases for both physical DUTs and virtual mesh nodes.
 
