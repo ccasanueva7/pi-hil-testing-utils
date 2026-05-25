@@ -88,6 +88,9 @@ Key terms used across the FCEFyN testbed documentation.
 **place**
 : A Labgrid concept representing one testable resource (a DUT with all its attached resources). A place has a name (e.g. `labgrid-fcefyn-belkin_rt3200_1`) and is registered with the coordinator.
 
+**prometheus-node-exporter-lua**
+: Reimplementación en Lua de node_exporter, mucho más liviana, pensada para OpenWrt (donde la versión Go no entraría en flash). Los DUTs la corren escuchando en loopback (127.0.0.1:9100); el host la consume vía autossh tunnel.
+
 **QEMU**
 : An open-source machine emulator. Used to run LibreMesh x86_64 firmware images as virtual machines for CI mesh tests without physical hardware.
 
