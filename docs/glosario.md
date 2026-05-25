@@ -55,6 +55,9 @@ Key terms used across the FCEFyN testbed documentation.
 **lime-packages**
 : The GitHub repository (`fcefyn-testbed/lime-packages`) that contains the LibreMesh CI workflow (`build-firmware.yml`). Builds firmware, runs tests, and publishes results.
 
+**ImageBuilder (OpenWrt)**
+: Container que arma imágenes de firmware OpenWrt a partir de paquetes precompilados (sin compilar el kernel). El stage `build-image` del workflow lo usa para combinar el feed de lime-packages con el rootfs base por target/release.
+
 **mac80211_hwsim**
 : A Linux kernel module that creates virtual IEEE 802.11 (WiFi) radios. Used in combination with vwifi to simulate WiFi connectivity between QEMU VMs without physical hardware.
 
