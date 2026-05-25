@@ -115,6 +115,12 @@ Key terms used across the FCEFyN testbed documentation.
 **UBI / UBIFS**
 : Unsorted Block Image filesystem. The flash layout used by OpenWrt on the Belkin RT3200. Requires a one-time migration from the stock layout before initramfs tests can run.
 
+**UCI (Unified Configuration Interface)**
+: Sistema de configuración de OpenWrt: archivos planos bajo `/etc/config/` y la CLI `uci` (`uci show lime-defaults`, `uci set lime.*`, `uci commit`). Los tests usan `uci show` para verificar que LibreMesh aplicó los protos esperados; los workflows manejan la config de cada DUT vía UCI.
+
+**ubus**
+: Bus de comunicación entre procesos de OpenWrt (similar a D-Bus pero más liviano). Servicios como netifd, hostapd, dnsmasq exponen métodos JSON. Los tests usan `ubus call system board` para leer el modelo, kernel, distro y revisión del DUT.
+
 **VLAN**
 : Virtual LAN. The lab uses VLANs to isolate DUT traffic: VLAN 100–104 for isolated testing, VLAN 200 for mesh mode (DUTs see each other).
 
