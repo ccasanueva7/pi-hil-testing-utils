@@ -7,6 +7,9 @@ Key terms used across the FCEFyN testbed documentation.
 **auto-merge**
 : A GitHub Pull Request setting that merges the PR automatically as soon as all required reviews and status checks pass. The CI results pipeline relies on it so the bot PR opened by `collect-lime-results.yml` lands on `develop` without manual intervention. Requires the repo-level "Allow auto-merge" toggle to be on.
 
+**autossh**
+: Wrapper alrededor de `ssh` que monitorea la conexión y la levanta de vuelta cuando se cae. El lab lo usa para mantener los túneles SSH desde el host al puerto del exporter de cada DUT (`dut-metrics-tunnel-<name>.service`), de modo que si la VLAN del DUT cambia durante un test, Prometheus recupera el scrape sin intervención.
+
 **batman-adv**
 : B.A.T.M.A.N. Advanced — a mesh routing protocol implemented as a Linux kernel module. Operates at Layer 2, handling frame forwarding between mesh nodes. Used by LibreMesh for L2 mesh connectivity.
 
