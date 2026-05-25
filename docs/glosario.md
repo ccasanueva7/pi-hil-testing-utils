@@ -46,6 +46,9 @@ Key terms used across the FCEFyN testbed documentation.
 **JUnit XML**
 : A standard XML format for test results, originally from the Java JUnit framework. pytest generates JUnit XML with `--junitxml`. The dashboard parses these files to show per-test-case results.
 
+**KVM (Kernel-based Virtual Machine)**
+: Módulo de Linux que provee virtualización asistida por hardware (`/dev/kvm`). QEMU lo usa para que las VMs corran a velocidad cercana a nativa. El step `enable_kvm.sh` del CI instala una udev rule para darle permisos `rw` al usuario del runner sobre `/dev/kvm`.
+
 **Labgrid**
 : Open-source framework for embedded board testing. Manages place reservations, power control, serial console, and SSH access to DUTs. Used to coordinate test access across multiple CI jobs and lab hosts.
 
