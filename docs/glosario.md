@@ -17,7 +17,7 @@ Key terms used across the FCEFyN testbed documentation.
 : A distance-vector routing daemon implementing the Babel routing protocol (RFC 8966). Used by LibreMesh for IPv4/IPv6 routing on top of the batman-adv mesh.
 
 **batctl**
-: CLI de batman-adv. `batctl n` lista vecinos, `batctl o` la tabla de originadores, `batctl if` muestra qué interfaces hardware están unidas al mesh. Los tests `test_mesh.py` lo usan para validar que la malla efectivamente se formó.
+: batman-adv CLI. `batctl n` lists neighbors, `batctl o` the originator table, `batctl if` shows which hardware interfaces are attached to the mesh. The `test_mesh.py` tests rely on it to validate that the mesh actually formed.
 
 **conntrack**
 : Linux kernel table that tracks network connections (TCP, UDP, etc.) — Netfilter uses it for NAT and stateful filtering. On the orchestrator it fills quickly because of `autossh` tunnels and labgrid SSH proxies; once it approaches the limit (`node_nf_conntrack_entries_limit`), new flows start being dropped.
@@ -29,16 +29,16 @@ Key terms used across the FCEFyN testbed documentation.
 : A physical router connected to the lab and managed by Labgrid. Each DUT has a place name (e.g. `belkin_rt3200_1`), a VLAN, serial console, and power control.
 
 **dropbear**
-: Servidor SSH liviano que viene por default en OpenWrt. Los tests SSH-ean a los DUTs vía dropbear; `test_dropbear_startup` espera hasta 120 s a que el daemon esté escuchando en `0.0.0.0:22` antes de declarar el DUT listo.
+: Lightweight SSH server that ships by default on OpenWrt. Tests SSH into the DUTs through dropbear; `test_dropbear_startup` waits up to 120 s for the daemon to start listening on `0.0.0.0:22` before declaring the DUT ready.
 
 **DTB (Device Tree Blob)**
-: Archivo binario compilado a partir de un `.dts` (Device Tree Source). Describe el hardware al kernel Linux (memoria, CPUs, periféricos, particiones MTD). El pipeline de CI parcha DTBs para inyectar MAC OEM o forzar el layout SPI-NAND legacy en Belkin RT3200.
+: Binary file compiled from a `.dts` (Device Tree Source). Describes the hardware to the Linux kernel (memory, CPUs, peripherals, MTD partitions). The CI pipeline patches DTBs to inject the OEM MAC or force the legacy SPI-NAND layout on Belkin RT3200.
 
 **initramfs**
 : An in-memory root filesystem loaded by the kernel at boot. Used for CI testing because the device boots from RAM via TFTP — no flash write occurs. The device returns to its previous state on power cycle.
 
 **FIT image (Flattened Image Tree)**
-: Formato de imagen que U-Boot puede bootear: combina kernel, DTB y ramdisk en un único `.itb`. El pipeline de lime-packages genera FIT para los targets Mediatek (Belkin RT3200, BPi-R4, OpenWrt One) e inyecta `bootargs` para que U-Boot use el initramfs en RAM.
+: Image format that U-Boot can boot: combines kernel, DTB, and ramdisk in a single `.itb`. The lime-packages pipeline emits FIT images for the MediaTek targets (Belkin RT3200, BPi-R4, OpenWrt One) and injects `bootargs` so U-Boot uses the initramfs from RAM.
 
 **iperf3**
 : Herramienta de medición de throughput TCP/UDP. Los tests virtual-mesh la usan (cuando está instalada en la imagen) para medir el ancho de banda entre nodos del mesh.
