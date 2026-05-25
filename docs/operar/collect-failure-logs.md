@@ -11,15 +11,14 @@ Every test job uploads a `test-results-<scope>` artifact (retention: 14 days). P
 | File | What it is |
 |---|---|
 | `report.xml` | JUnit XML pytest generates. Per-test-case pass/fail and stderr/stdout for failures. |
-| `pytest.log` / labgrid `--lg-log` files | Console output of every Labgrid driver: console buffer, SSH I/O, power events, lock events. |
-| `LG_PLACE-<sha>.log` | The most useful single file — full timeline of the run from lock to unlock. |
+| Labgrid `--lg-log` files | Console output captured by every Labgrid driver: serial console buffer, SSH I/O, power events, lock events. Exact filenames depend on the driver (`<driver>-<resource>.log`). |
 
 Download from the run's "Summary" page → "Artifacts", or via CLI:
 
 ```sh
 gh run download <run-id> -R fcefyn-testbed/lime-packages -n test-results-<place>-<release>
 unzip test-results-*.zip
-less LG_PLACE-*.log
+ls -la                                  # see what came in the bundle
 ```
 
 ## 2. From the lab host
@@ -44,10 +43,12 @@ USB serial disconnects, `ser2net` resets, USB power events appear here.
 
 ### Power-control history
 
-`pdudaemon` does not log to journald by default; check its log file:
+`pdudaemon` is set up by the upstream `openwrt-tests` playbook. Depending on how it was deployed it logs either to journald or to a file:
 
 ```sh
-sudo tail -200 /var/log/pdudaemon/pdudaemon.log
+sudo journalctl -u pdudaemon --since "2 hours ago" --no-pager
+# if empty, search file logs:
+sudo find /var/log -name '*pdudaemon*' -mtime -1 2>/dev/null
 ```
 
 ### TFTP serving
@@ -98,7 +99,7 @@ gh issue list -R fcefyn-testbed/lime-packages --label healthcheck --state all
 For a typical failed run:
 
 1. Open the run on GitHub, find the failing job, scroll the log to the first `FAILED` line — usually points to which test case.
-2. Download the `test-results-*` artifact, open `LG_PLACE-*.log` to see what the DUT was doing at that moment.
+2. Download the `test-results-*` artifact and open the relevant `.log` files to see what the DUT was doing at that moment.
 3. If it looks like a hardware or power issue, jump to `labgrid-exporter` / `pdudaemon` logs on the lab host.
 4. If it looks like a LibreMesh issue, open the healthcheck issue for the `lime-report` snapshot.
 
