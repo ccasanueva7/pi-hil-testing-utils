@@ -139,8 +139,8 @@ Key terms used across the FCEFyN testbed documentation.
 **WireGuard**
 : A modern VPN protocol. Used to connect the self-hosted CI runner (on the lab's datacenter VM) to the lab host, enabling remote hardware access over an encrypted tunnel.
 
-**create-pull-request (action de CI)**
-: GitHub Action de terceros que crea PRs vía la API REST de GitHub en lugar de `git push` + `gh pr create`. La usa `collect-lime-results.yml` con `sign-commits: true` para que los commits del bot queden firmados con la web-flow key de GitHub (aparecen "Verified"). Requiere un PAT con permisos **Contents: write** y **Pull requests: write** sobre este repo, cargado como secret `BOT_PR_TOKEN`; el `GITHUB_TOKEN` por default no alcanza porque la org tiene deshabilitado el toggle "Allow GitHub Actions to create and approve pull requests".
+**create-pull-request (CI action)**
+: Third-party GitHub Action that creates PRs via the GitHub REST API instead of `git push` + `gh pr create`. `collect-lime-results.yml` uses it with `sign-commits: true` so the bot's commits land signed with GitHub's web-flow key (they show as "Verified"). Requires a PAT with **Contents: write** and **Pull requests: write** scopes on this repo, stored as the `BOT_PR_TOKEN` secret; the default `GITHUB_TOKEN` is not enough because the org has the "Allow GitHub Actions to create and approve pull requests" toggle disabled.
 
 **workflow_dispatch**
 : A GitHub Actions trigger that allows manually starting a workflow from the GitHub UI or API, with optional input parameters (e.g. selecting an OpenWrt release version).
