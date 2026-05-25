@@ -41,13 +41,13 @@ Key terms used across the FCEFyN testbed documentation.
 : Image format that U-Boot can boot: combines kernel, DTB, and ramdisk in a single `.itb`. The lime-packages pipeline emits FIT images for the MediaTek targets (Belkin RT3200, BPi-R4, OpenWrt One) and injects `bootargs` so U-Boot uses the initramfs from RAM.
 
 **iperf3**
-: Herramienta de medición de throughput TCP/UDP. Los tests virtual-mesh la usan (cuando está instalada en la imagen) para medir el ancho de banda entre nodos del mesh.
+: TCP/UDP throughput measurement tool. The virtual-mesh tests use it (when present in the image) to measure bandwidth between mesh nodes.
 
 **JUnit XML**
 : A standard XML format for test results, originally from the Java JUnit framework. pytest generates JUnit XML with `--junitxml`. The dashboard parses these files to show per-test-case results.
 
 **KVM (Kernel-based Virtual Machine)**
-: Módulo de Linux que provee virtualización asistida por hardware (`/dev/kvm`). QEMU lo usa para que las VMs corran a velocidad cercana a nativa. El step `enable_kvm.sh` del CI instala una udev rule para darle permisos `rw` al usuario del runner sobre `/dev/kvm`.
+: Linux module providing hardware-assisted virtualization (`/dev/kvm`). QEMU uses it so VMs run at near-native speed. The CI's `enable_kvm.sh` step installs a udev rule that grants `rw` on `/dev/kvm` to the runner user.
 
 **Labgrid**
 : Open-source framework for embedded board testing. Manages place reservations, power control, serial console, and SSH access to DUTs. Used to coordinate test access across multiple CI jobs and lab hosts.
@@ -62,7 +62,7 @@ Key terms used across the FCEFyN testbed documentation.
 : The GitHub repository (`fcefyn-testbed/lime-packages`) that contains the LibreMesh CI workflow (`build-firmware.yml`). Builds firmware, runs tests, and publishes results.
 
 **ImageBuilder (OpenWrt)**
-: Container que arma imágenes de firmware OpenWrt a partir de paquetes precompilados (sin compilar el kernel). El stage `build-image` del workflow lo usa para combinar el feed de lime-packages con el rootfs base por target/release.
+: Container that assembles OpenWrt firmware images from pre-compiled packages (without rebuilding the kernel). The workflow's `build-image` stage uses it to combine the lime-packages feed with the base rootfs for each target/release.
 
 **mac80211_hwsim**
 : A Linux kernel module that creates virtual IEEE 802.11 (WiFi) radios. Used in combination with vwifi to simulate WiFi connectivity between QEMU VMs without physical hardware.
@@ -74,7 +74,7 @@ Key terms used across the FCEFyN testbed documentation.
 : A node_exporter metric describing whether a systemd unit is in a given state (`active`, `failed`, `inactive`, …). Used by the Orchestrator Host dashboard's Lab Services section to assert that `labgrid-exporter.service`, `pdudaemon.service`, and `ser2net.service` are running.
 
 **NTP (Network Time Protocol)**
-: Protocolo para sincronizar el reloj del sistema contra peers de tiempo confiables. El orchestrator usa el daemon de tiempo del SO (systemd-timesyncd por default, o chrony si se instala) para mantener el clock alineado. El panel "NTP offset" del dashboard Orchestrator Host monitorea el desvío vía `node_timex_offset_seconds`, métrica que viene del kernel timex y funciona sin importar qué daemon esté corriendo.
+: Protocol for synchronising the system clock with trusted time peers. The orchestrator uses whatever time daemon the OS provides (systemd-timesyncd by default, chrony if installed) to keep the clock aligned. The Orchestrator Host dashboard's "NTP offset" panel reads `node_timex_offset_seconds`, a kernel-timex metric that works regardless of which daemon is running.
 
 **opkg / apk**
 : Gestores de paquetes de OpenWrt. `opkg` se usa en releases 24.10.x y anteriores (paquetes `.ipk`); `apk` (apk-tools 3.x) reemplazó a opkg desde 25.12.x con paquetes `.apk` y un índice binario `packages.adb`. El CI tiene que branchear por formato porque las flags de `make image` cambian.
