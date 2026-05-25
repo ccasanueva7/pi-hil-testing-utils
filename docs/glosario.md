@@ -127,6 +127,9 @@ Key terms used across the FCEFyN testbed documentation.
 **vwifi**
 : A virtual WiFi relay tool that forwards mac80211_hwsim frames between QEMU VMs over TCP. Allows VMs on the same host to form a real IEEE 802.11 mesh. See [vwifi setup](diseno/vwifi.md).
 
+**vwifi-server / vwifi-client**
+: Pareja de procesos que reenvía frames `mac80211_hwsim` entre VMs QEMU sobre TCP, simulando un medio radio compartido. `vwifi-server` corre en el host del lab y `vwifi-client` adentro de cada VM. Permite formar un mesh real 802.11 sin hardware físico para los tests `test-mesh-qemu`.
+
 **WireGuard**
 : A modern VPN protocol. Used to connect the self-hosted CI runner (on the lab's datacenter VM) to the lab host, enabling remote hardware access over an encrypted tunnel.
 
