@@ -19,6 +19,9 @@ Key terms used across the FCEFyN testbed documentation.
 **batctl**
 : CLI de batman-adv. `batctl n` lista vecinos, `batctl o` la tabla de originadores, `batctl if` muestra qué interfaces hardware están unidas al mesh. Los tests `test_mesh.py` lo usan para validar que la malla efectivamente se formó.
 
+**conntrack**
+: Tabla del kernel Linux que trackea conexiones de red (TCP, UDP, etc.) — la usa Netfilter para NAT y stateful filtering. En el orchestrator se llena rápido por los túneles `autossh` y los SSH-proxies de labgrid; cuando se acerca al límite (`node_nf_conntrack_entries_limit`), los flujos nuevos empiezan a descartarse.
+
 **DUT** (Device Under Test)
 : A physical router connected to the lab and managed by Labgrid. Each DUT has a place name (e.g. `belkin_rt3200_1`), a VLAN, serial console, and power control.
 
