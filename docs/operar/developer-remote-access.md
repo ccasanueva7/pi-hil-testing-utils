@@ -257,21 +257,21 @@ uv run pytest tests/test_mesh.py -v --log-cli-level=INFO
 ```mermaid
 sequenceDiagram
     participant Dev as Developer machine
-    participant VM as Upstream VM<br/>(SSH :51818, gRPC :20408)
-    participant Host as labgrid-fcefyn host
+    participant VM as Upstream VM<br/>(SSH jump host :51818)
+    participant Host as labgrid-fcefyn host<br/>(coordinator :20408 loopback)
     participant Exp as Exporter (on host)
     participant DUT as DUT
 
     Dev->>VM: SSH (ProxyJump, :51818)
-    VM->>Host: SSH (WireGuard tunnel 10.0.0.10)
-    Exp->>VM: gRPC :20408 (register resources, via WireGuard)
-    Dev->>VM: gRPC :20408 lock place<br/>(tunneled via SSH through VM)
+    VM->>Host: SSH (WireGuard tunnel)
+    Exp->>Host: gRPC :20408 loopback (register resources locally)
+    Dev->>Host: gRPC :20408 lock place<br/>(tunneled via LG_PROXY SSH chain)
     Dev->>Host: rsync firmware (via SSH tunnel)
     Host->>Exp: stage firmware on TFTP
     Dev->>Exp: power cycle, serial console (via tunnel)
     Exp->>DUT: boot via TFTP
     Dev->>DUT: run pytest (via tunnel)
-    Dev->>VM: gRPC :20408 unlock place
+    Dev->>Host: gRPC :20408 unlock place
 ```
 
 | Component | Where | What |

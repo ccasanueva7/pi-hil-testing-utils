@@ -1,7 +1,7 @@
 # ZeroTier - admin remote access
 
 !!! warning "Admin-only"
-    ZeroTier is for **lab administrators** who need `sudo` on the host (Ansible, service management, switch/MikroTik consoles). Developers do **not** need ZeroTier: they reach the lab via the upstream coordinator as `ProxyJump` - see [developer-remote-access](developer-remote-access.md).
+    ZeroTier is for **lab administrators** who need `sudo` on the host (Ansible, service management, switch/MikroTik consoles). Developers do **not** need ZeroTier: they reach the lab via the **upstream VM** (SSH gateway) as `ProxyJump` - see [developer-remote-access](developer-remote-access.md).
 
 How to install ZeroTier on admin machines and reach the lab host as an unprivileged / personal user over VPN.
 

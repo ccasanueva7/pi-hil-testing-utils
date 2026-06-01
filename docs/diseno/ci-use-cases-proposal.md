@@ -10,7 +10,7 @@ The testbed supports two CI contexts:
 
 | Context | Upstream repo | Runner | Hardware |
 |---------|--------------|--------|----------|
-| **OpenWrt vanilla** | `openwrt/openwrt-tests` | FCEFyN self-hosted + remote labs | Physical DUTs (isolated VLANs) |
+| **OpenWrt vanilla** | `aparcar/openwrt-tests` | GitHub-hosted (ubuntu-latest) | Physical DUTs (isolated VLANs) |
 | **LibreMesh** | `libremesh/libremesh-tests` (fork) | FCEFyN self-hosted + GitHub-hosted | Physical DUTs (VLAN 200) + QEMU VMs |
 
 Both contexts can coexist on the same physical hardware using the hybrid lab architecture described in [hybrid-lab-proposal](hybrid-lab-proposal.md).
@@ -34,7 +34,7 @@ openwrt-tests CI
             └── OpenWrt One
 ```
 
-This use case requires FCEFyN DUTs to be registered in the upstream `global-coordinator`. See [openwrt-tests-onboarding](openwrt-tests-onboarding.md) for the onboarding process.
+This use case requires FCEFyN DUTs to be registered in `labnet.yaml` (upstream SSH gateway VM, `global-coordinator` hostname, is the SSH jump host - it does **not** run `labgrid-coordinator`). See [openwrt-tests-onboarding](openwrt-tests-onboarding.md) for the onboarding process.
 
 ---
 
@@ -105,8 +105,8 @@ See [virtual-mesh-proposal](virtual-mesh-proposal.md) for the full architecture.
 
 ```
 pool-manager.py
-    ├── openwrt pool (DUTs 1-3) → isolated VLANs → upstream coordinator
-    └── libremesh pool (DUTs 4-6) → VLAN 200 → local coordinator
+    ├── openwrt pool (DUTs 1-3) → isolated VLANs → local coordinator (via SSH gateway proxy)
+    └── libremesh pool (DUTs 4-6) → VLAN 200 → local coordinator (self-hosted runner)
 ```
 
 This use case requires the switch to support per-port VLAN configuration and the pool-manager to apply differential VLAN changes.

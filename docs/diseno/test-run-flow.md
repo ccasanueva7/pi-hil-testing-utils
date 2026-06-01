@@ -14,7 +14,7 @@ push → build-firmware.yml → build matrix → test matrix
 
 ### 2. Runner picks up the job
 
-A self-hosted runner on the datacenter VM (`labgrid-fcefyn`) picks up the test job. The runner has WireGuard connectivity to the lab host.
+A self-hosted runner on the lab host (`labgrid-fcefyn`, Lenovo T430) picks up the test job. The runner reaches the local coordinator directly over loopback.
 
 ### 3. Labgrid reserves the DUT
 
@@ -114,21 +114,20 @@ pytest JUnit XML → uploaded as artifact → optionally published to Pages (sam
 ```mermaid
 sequenceDiagram
     participant GH as GitHub Actions
-    participant Runner as Self-hosted runner
-    participant Coord as labgrid-coordinator
-    participant Lab as Lab host
+    participant Runner as Self-hosted runner<br/>(on lab host, loopback)
+    participant Coord as labgrid-coordinator<br/>(:20408 loopback)
     participant DUT as DUT
 
     GH->>Runner: Dispatch test job
-    Runner->>Coord: lock place (WebSocket)
+    Runner->>Coord: lock place (gRPC)
     Coord-->>Runner: lock granted
-    Runner->>Lab: SSH (WireGuard)
-    Lab->>DUT: power off (pdudaemon)
-    Lab->>DUT: power on (TFTP boot)
-    DUT-->>Lab: SSH up
-    Runner->>DUT: run tests (SSH proxy)
+    Runner->>DUT: power off (pdudaemon local)
+    Runner->>DUT: power on (TFTP boot)
+    DUT-->>Runner: SSH up
+    Runner->>DUT: run tests (SSH via labgrid-bound-connect)
     Runner->>GH: upload report.xml artifact
-    Runner->>Coord: unlock place
+    Runner->>Coord: unlock place (gRPC)
     Note over GH: collect-lime-results.yml<br/>(in fcefyn_testbed_utils, every 6h)<br/>pulls artifact and opens bot PR
+    GH->>GH: publish-results job
     GH->>GH: pages.yml deploy
 ```

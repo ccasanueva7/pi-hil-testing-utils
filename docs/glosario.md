@@ -86,7 +86,7 @@ Key terms used across the FCEFyN testbed documentation.
 : Pre-compiled toolchain set (one per architecture) that lets you compile OpenWrt packages without the full buildroot. The CI's `build-feed` stage uses it via `openwrt/gh-action-sdk@v9` to produce the `.ipk` / `.apk` files for the lime-packages feed.
 
 **pdudaemon**
-: A daemon that controls power to DUTs via relay boards or PDUs. Exposes an HTTP API. The lab uses an Arduino + SSR relay board controlled by pdudaemon.
+: A daemon that controls power to DUTs via relay boards or PDUs. Exposes an HTTP API. The lab uses an Arduino with electromechanical relay modules (DUTs, DC 12V) and SSR modules (infrastructure: cooler and main PSU) controlled by pdudaemon.
 
 **PAT (Personal Access Token)**
 : A GitHub credential scoped per user. The CI results pipeline uses two fine-grained PATs as repository secrets in `fcefyn_testbed_utils`: `LIME_PACKAGES_TOKEN` (Actions: Read on `lime-packages`, for downloading artifacts) and `BOT_PR_TOKEN` (Contents + Pull Requests: Write on this repo, for opening the auto-merged bot PR).
@@ -137,7 +137,7 @@ Key terms used across the FCEFyN testbed documentation.
 : Process pair that forwards `mac80211_hwsim` frames between QEMU VMs over TCP, emulating a shared radio medium. `vwifi-server` runs on the lab host and `vwifi-client` inside each VM. Lets the VMs form a real 802.11 mesh without physical hardware for the `test-mesh-qemu` jobs.
 
 **WireGuard**
-: A modern VPN protocol. Used to connect the self-hosted CI runner (on the lab's datacenter VM) to the lab host, enabling remote hardware access over an encrypted tunnel.
+: A modern VPN protocol. Used to connect the lab host to the upstream SSH gateway VM, enabling GitHub-hosted runners (openwrt-tests) to reach the lab's DUTs over an encrypted tunnel. The self-hosted runner (lime-packages physical tests) runs directly on the lab host.
 
 **create-pull-request (CI action)**
 : Third-party GitHub Action that creates PRs via the GitHub REST API instead of `git push` + `gh pr create`. `collect-lime-results.yml` uses it with `sign-commits: true` so the bot's commits land signed with GitHub's web-flow key (they show as "Verified"). Requires a PAT with **Contents: write** and **Pull requests: write** scopes on this repo, stored as the `BOT_PR_TOKEN` secret; the default `GITHUB_TOKEN` is not enough because the org has the "Allow GitHub Actions to create and approve pull requests" toggle disabled.
