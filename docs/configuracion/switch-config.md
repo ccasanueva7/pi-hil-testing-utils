@@ -234,7 +234,77 @@ The `%vlanXXX` in `address` must match the DUT port **VLAN ID** on the switch; t
 
 ---
 
-## 7. Other switches
+## 7. Recovery after factory reset {: #recovery-after-factory-reset }
+
+If the switch loses its configuration (factory reset, firmware update, power event), follow this procedure to restore the testbed VLAN topology from the declarative `dut-config.yaml`.
+
+### Prerequisites
+
+- Physical or network access to the switch default IP (`192.168.0.1`).
+- `labgrid-switch-abstraction` installed on the host (`switch-vlan --help`).
+- `~/.config/switch.conf` (or `/etc/switch.conf`) with `SWITCH_PASSWORD` set.
+
+### Step-by-step
+
+1. **Disconnect DUT cables** from the switch to avoid IP conflicts (all DUTs default to `192.168.1.1` on a flat VLAN 1).
+
+2. **Access the switch web UI** at `http://192.168.0.1` (factory credentials: `admin` / empty password).
+
+3. **Enable SSH** and **set a secure password** via the web UI (System → User Management). This is the only manual step; `switch-vlan --init` cannot configure SSH or passwords on the switch.
+
+4. **Verify SSH access** from the host:
+
+    ```bash
+    ssh switch-fcefyn
+    # Expected prompt: SG2016P>
+    ```
+
+5. **Update `switch.conf`** if the password changed:
+
+    ```bash
+    # Edit SWITCH_PASSWORD in the conf file
+    vim ~/.config/switch.conf   # or /etc/switch.conf
+    ```
+
+6. **Apply the full VLAN topology** from `dut-config.yaml`:
+
+    ```bash
+    switch-vlan --init
+    ```
+
+    This creates all VLANs (100-107, 200), configures every DUT access port (untagged + PVID), and sets uplink/trunk ports (9, 10) to carry all VLANs tagged. The command is **idempotent**: safe to re-run on an already-configured switch.
+
+7. **Reconnect DUT cables** to their assigned ports (see [port mapping](#31-assignment-table)).
+
+8. **Verify** with a restore-all and healthcheck:
+
+    ```bash
+    switch-vlan --restore-all
+    # SSH to each DUT
+    for dut in dut-belkin-rt3200-1 dut-belkin-rt3200-2 dut-belkin-rt3200-3 \
+               dut-bananapi-bpi-r4 dut-openwrt-one dut-librerouter-1; do
+        echo -n "$dut: "
+        ssh -o ConnectTimeout=5 -o BatchMode=yes "$dut" echo OK 2>&1 | tail -1
+    done
+    ```
+
+!!! warning "SSH and password are not automated"
+    The TP-Link SG2016P does not expose password or SSH configuration via its CLI. After a factory reset, enabling SSH and setting the admin password must be done manually through the web interface. Everything else (VLANs, ports, trunks, PVIDs) is restored by `switch-vlan --init`.
+
+### PVID healthcheck
+
+`scripts/switch/switch_healthcheck.py` queries each DUT port PVID via SSH and compares it against `dut-config.yaml`. Run manually or via cron to detect silent configuration loss:
+
+```bash
+python3 scripts/switch/switch_healthcheck.py
+python3 scripts/switch/switch_healthcheck.py --quiet   # exit code only
+```
+
+Exit codes: `0` all match, `1` mismatch found, `2` connection/config error.
+
+---
+
+## 8. Other switches
 
 Same 802.1Q logic; need a driver that emits the vendor CLI commands.
 

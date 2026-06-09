@@ -21,3 +21,19 @@
     src: "{{ playbook_dir }}/../scripts/switch/poe_switch_control.py"
     dest: /usr/local/bin/poe_switch_control.py
     mode: "0755"
+
+- name: Copy switch_healthcheck.py to /usr/local/bin
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../scripts/switch/switch_healthcheck.py"
+    dest: /usr/local/bin/switch_healthcheck.py
+    mode: "0755"
+
+- name: Apply full switch VLAN topology from dut-config.yaml
+  ansible.builtin.command:
+    cmd: switch-vlan --init
+  register: switch_init_result
+  changed_when: "'Full topology applied' in switch_init_result.stdout"
+  failed_when: false
+  tags:
+    - switch_init
+    - never
