@@ -144,13 +144,11 @@ For most boards, copy an existing similar entry and adjust. Examples:
 
 ### Small-flash / ath79 device
 
-!!! warning "ath79 (LibreRouter v1) — not supported in CI"
-    This device type cannot be added to the CI matrix with the current toolchain.
-    ImageBuilder for ath79/generic does not produce a RAM-bootable `KERNEL_INITRAMFS` artifact,
-    and the LibreRouter U-Boot fork does not propagate the initrd sub-image to the kernel.
-    The `multi-uimage` path was prototyped and discarded. LibreRouter lab runs must be done
-    manually with a pre-staged firmware image.
-    See [ImageBuilder limits](lime-packages/imagebuilder-limits.md) for the full investigation.
+!!! note "ath79 (LibreRouter v1) - dual-TFTP format"
+    ath79 devices where ImageBuilder cannot produce a `KERNEL_INITRAMFS` artifact use
+    `IMAGE_FORMAT=dual-tftp`. The CI ships kernel.bin + rootfs.uimage as separate TFTP
+    artifacts. Use `librerouter_v1` in `targets.yml` as reference.
+    See [ImageBuilder limits](lime-packages/imagebuilder-limits.md) for details.
 
 ---
 
