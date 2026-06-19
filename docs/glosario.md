@@ -32,7 +32,7 @@ Key terms used across the FCEFyN testbed documentation.
 : Lightweight SSH server that ships by default on OpenWrt. Tests SSH into the DUTs through dropbear; `test_dropbear_startup` waits up to 120 s for the daemon to start listening on `0.0.0.0:22` before declaring the DUT ready.
 
 **DTB (Device Tree Blob)**
-: Binary file compiled from a `.dts` (Device Tree Source). Describes the hardware to the Linux kernel (memory, CPUs, peripherals, MTD partitions). The CI pipeline patches DTBs to inject the OEM MAC or force the legacy SPI-NAND layout on Belkin RT3200.
+: Binary file compiled from a `.dts` (Device Tree Source). Describes the hardware to the Linux kernel (memory, CPUs, peripherals, MTD partitions). The `/chosen/bootargs` node can fix kernel boot parameters; on ath79 with `CONFIG_MIPS_CMDLINE_FROM_DTB=y`, those values take precedence over U-Boot `bootargs`. The CI pipeline patches DTBs to inject the OEM MAC or force the legacy SPI-NAND layout on Belkin RT3200.
 
 **initramfs**
 : An in-memory root filesystem loaded by the kernel at boot. Used for CI testing because the device boots from RAM via TFTP — no flash write occurs. The device returns to its previous state on power cycle.

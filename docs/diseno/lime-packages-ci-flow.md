@@ -150,8 +150,9 @@ References:
 !!! note "ath79 / LibreRouter v1 - dual-TFTP format"
     LibreRouter v1 uses `IMAGE_FORMAT=dual-tftp` instead of FIT or multi-uimage.
     The CI ships kernel.bin + rootfs.uimage (uImage-wrapped CPIO) as separate TFTP artifacts;
-    U-Boot loads both and `bootm <kernel> <ramdisk>` passes initrd natively, bypassing
-    `CONFIG_CMDLINE_OVERRIDE`. See [ImageBuilder limits](lime-packages/imagebuilder-limits.md).
+    U-Boot loads both and `bootm <kernel> <ramdisk>` passes initrd natively via the
+    MIPS boot parameter block (not via kernel command line), bypassing
+    `CONFIG_MIPS_CMDLINE_FROM_DTB`. See [ImageBuilder limits](lime-packages/imagebuilder-limits.md).
 
 `BUILD_INITRAMFS=1` repacks the ImageBuilder rootfs into a RAM-bootable
 artifact (`kernel-bin` + DTB + CPIO ramdisk). Targets with

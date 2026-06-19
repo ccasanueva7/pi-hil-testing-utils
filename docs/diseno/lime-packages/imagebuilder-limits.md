@@ -90,11 +90,23 @@ bootm 0x82000000 0x84000FC0
 
 ### Why not `rd_start`/`rd_size` bootargs?
 
-The LibreRouter kernel sets `CONFIG_CMDLINE_OVERRIDE=y`, which means it
-**ignores all bootloader arguments** and uses only the compiled-in
-command line (`console=ttyS0,115200n8 rootfstype=squashfs,jffs2`).
-Parameters like `rd_start=`, `rd_size=`, or `initrd=` passed via
-`setenv bootargs` never reach the kernel.
+The ImageBuilder kernel for ath79 (OpenWrt 24.10) ships with:
+
+- `CONFIG_MIPS_CMDLINE_FROM_DTB=y` - take kernel arguments from the
+  Device Tree (DTB) embedded in the kernel image.
+- `CONFIG_CMDLINE_BOOL=y` with `CONFIG_CMDLINE="rootfstype=squashfs,jffs2"`.
+
+The LibreRouter DT (`qca955x.dtsi`) sets
+`chosen { bootargs = "console=ttyS0,115200n8"; }`. Because
+`MIPS_CMDLINE_DTB_EXTEND` is not enabled, U-Boot `bootargs` (including
+`rd_start=`, `rd_size=`, or `initrd=`) are not merged into the command
+line the kernel actually uses. The serial log therefore shows only
+`console=ttyS0,115200n8 rootfstype=squashfs,jffs2`.
+
+Note: `CONFIG_CMDLINE_OVERRIDE` is **not** set on ath79 in OpenWrt
+24.10 (`target/linux/ath79/config-6.6`). That option would force the
+compiled-in line only; on LibreRouter the same practical outcome comes
+from `MIPS_CMDLINE_FROM_DTB` plus DT `chosen/bootargs`.
 
 ### How two-argument `bootm` bypasses this
 
@@ -103,8 +115,8 @@ When U-Boot receives `bootm <kernel_addr> <ramdisk_addr>`, its
 fork) reads the uImage header at `<ramdisk_addr>`, computes the data
 boundaries, and passes `initrd_start`/`initrd_end` to the kernel via
 `linux_env_set()`. This mechanism operates through the MIPS boot
-parameter block, not through the kernel command line, so
-`CONFIG_CMDLINE_OVERRIDE` has no effect.
+parameter block, not through the kernel command line, so DT bootargs and
+`MIPS_CMDLINE_FROM_DTB` do not block initrd loading.
 
 ### Page alignment
 
