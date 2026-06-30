@@ -23,8 +23,10 @@
 # --- Por serial: funciona en cualquier puerto del hub ---
 
 # Arduino Nano - FTDI, serial A5069RR4
+# TAG+="systemd" + SYSTEMD_WANTS starts the daemon when the device appears (after USB reconnect).
 SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="A5069RR4", \
-  SYMLINK+="arduino-relay", MODE="0666", GROUP="dialout", ENV{ID_MM_DEVICE_IGNORE}="1"
+  SYMLINK+="arduino-relay", MODE="0666", GROUP="dialout", ENV{ID_MM_DEVICE_IGNORE}="1", \
+  TAG+="systemd", ENV{SYSTEMD_WANTS}="arduino-relay-daemon.service"
 
 # Banana Pi R4 - FTDI, serial BG02PW5K
 SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="BG02PW5K", \
