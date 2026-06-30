@@ -127,7 +127,7 @@ If the root filesystem went read-only, fix the underlying disk issue before brin
 
 ### Arduino relay daemon
 
-After a hard power cut, the daemon may keep a stale serial connection while still reporting **active (running)**; relay commands then fail with **`Input/output error`**. See [Observed failure](../configuracion/arduino-relay.md#self-healing) for the full symptom table. The daemon [self-heals](../configuracion/arduino-relay.md#self-healing) in most cases (heartbeat + `BindsTo`). Verify:
+After a hard power cut, the daemon may keep a stale serial connection while still reporting **active (running)**; relay commands then fail with **`Input/output error`**. See [Observed failure](../configuracion/arduino-relay.md#self-healing) for the full symptom table. Recovery uses heartbeat, `BindsTo`, and udev `SYSTEMD_WANTS` ([Self-healing](../configuracion/arduino-relay.md#self-healing)). Verify:
 
 ```sh
 arduino_relay_control.py status

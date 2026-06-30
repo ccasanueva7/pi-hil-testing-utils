@@ -182,20 +182,44 @@ After a power outage (or USB hub reset), the Arduino or its serial adapter re-en
 
 #### Recovery mechanisms
 
-Two mechanisms recover automatically from power outages and USB glitches:
+Three pieces work together after power outages and USB glitches:
 
-| Mechanism | How it works |
-|-----------|-------------|
-| **Heartbeat** (daemon code) | Every 30 s of inactivity, the daemon sends `ID` to the Arduino. If the serial link returns an I/O error, the daemon exits with code 1, and systemd restarts it via `Restart=on-failure`. |
-| **BindsTo** (systemd unit) | The service is bound to `dev-arduino\x2drelay.device`. If the USB device disappears (hub reset, cable swap), systemd stops the service immediately. When udev re-creates `/dev/arduino-relay`, systemd starts the daemon again. |
+| Mechanism | Where | What it does |
+|-----------|-------|--------------|
+| **Heartbeat** | `arduino_daemon.py` | Every 30 s of inactivity, sends `ID` to the Arduino. On I/O error, the daemon exits with code 1; `Restart=on-failure` starts a fresh process with a new serial FD. |
+| **BindsTo** | `arduino-relay-daemon.service` | Binds to `dev-arduino\x2drelay.device`. When the USB device disappears, systemd **stops** the service. It does **not** start it again when the device reappears. |
+| **SYSTEMD_WANTS** | `99-serial-devices.rules` (Arduino rule) | When udev creates `/dev/arduino-relay`, it tells systemd to **start** `arduino-relay-daemon.service`. |
 
-Both mechanisms complement each other: `BindsTo` covers USB disconnect/reconnect (device disappears from the kernel), while the heartbeat covers scenarios where the USB device stays present but the MCU resets or the serial link becomes stale (errno 5 `Input/output error`).
+```udev
+# Arduino rule (excerpt) - configs/templates/99-serial-devices.rules
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="A5069RR4", \
+  SYMLINK+="arduino-relay", ..., \
+  TAG+="systemd", ENV{SYSTEMD_WANTS}="arduino-relay-daemon.service"
+```
+
+| Scenario | Heartbeat | BindsTo | SYSTEMD_WANTS |
+|----------|-----------|---------|---------------|
+| Stale FD, device node still present | Detects and exits | - | - |
+| USB unplug / hub reset | - | Stops daemon | Starts daemon on reconnect |
+| Full power cut (host stays up) | May detect stale FD | May stop on device loss | Starts when device returns |
 
 `StartLimitBurst=10` within `StartLimitIntervalSec=300` prevents restart loops if the hardware is truly broken.
 
+After deploying or changing the udev rule:
+
+```bash
+sudo cp configs/templates/99-serial-devices.rules /etc/udev/rules.d/
+sudo udevadm control --reload-rules
+```
+
 ### 7.4 When manual restart is still needed
 
-If the heartbeat and `BindsTo` already recovered the daemon, no manual action is required. Manual restart may still be needed if the daemon reached the restart limit (10 starts in 5 minutes):
+If all three pieces are deployed, recovery is automatic in normal cases. Manual action is still needed when:
+
+| Situation | Fix |
+|-----------|-----|
+| Service **failed** after USB unplug (udev rule missing or not reloaded) | Deploy `99-serial-devices.rules`, run `udevadm control --reload-rules`, then `systemctl start arduino-relay-daemon` |
+| Restart limit reached (10 starts in 5 minutes) | `systemctl reset-failed arduino-relay-daemon` then `systemctl start` |
 
 ```bash
 sudo systemctl reset-failed arduino-relay-daemon
