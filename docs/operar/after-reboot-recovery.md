@@ -17,6 +17,7 @@ systemctl is-active \
   pdudaemon \
   ser2net \
   dnsmasq \
+  arduino-relay-daemon \
   prometheus \
   grafana-server
 ```
@@ -118,8 +119,47 @@ This verifies the coordinator, exporter, and `pdudaemon` chain end-to-end withou
 
 If the host went down ungracefully (UPS empty, plug pulled), additionally check:
 
-- `df -h` — no filesystem read-only.
-- `dmesg | grep -i 'i/o error\|EXT4-fs error'` — no disk errors.
-- `lsblk` — all expected disks present.
+- `df -h` - no filesystem read-only.
+- `dmesg | grep -i 'i/o error\|EXT4-fs error'` - no disk errors.
+- `lsblk` - all expected disks present.
 
 If the root filesystem went read-only, fix the underlying disk issue before bringing services back up.
+
+### Arduino relay daemon
+
+After a hard power cut, the daemon may keep a stale serial connection while still reporting **active (running)**; relay commands then fail with **`Input/output error`**. See [Observed failure](../configuracion/arduino-relay.md#self-healing) for the full symptom table. The daemon [self-heals](../configuracion/arduino-relay.md#self-healing) in most cases (heartbeat + `BindsTo`). Verify:
+
+```sh
+arduino_relay_control.py status
+```
+
+If it reports `Input/output error` or the service is `failed`:
+
+```sh
+sudo systemctl restart arduino-relay-daemon
+arduino_relay_control.py status
+```
+
+If the restart limit was reached:
+
+```sh
+sudo systemctl reset-failed arduino-relay-daemon
+sudo systemctl start arduino-relay-daemon
+```
+
+### Managed switch (TP-Link SG2016P)
+
+The managed switch may factory-reset on power loss, returning to default IP `192.168.0.1` with credentials `admin/admin` and no VLAN configuration. Recovery procedure:
+
+1. Disconnect all DUT cables from the switch, leave only gateway and laptop connected.
+2. Access the web UI at `http://192.168.0.1`, log in with `admin/admin`.
+3. Change credentials to the lab-standard ones.
+4. Re-enable SSH if disabled.
+5. Run `switch-vlan --init` from the lab host (or reconfigure VLANs manually).
+6. Reconnect DUT cables.
+
+After reconfiguration, verify with `switch_healthcheck.py`:
+
+```sh
+switch_healthcheck.py
+```

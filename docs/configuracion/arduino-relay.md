@@ -166,19 +166,40 @@ sudo systemctl daemon-reload && sudo systemctl enable --now arduino-relay-daemon
 
 Daemon commands: `start`, `stop`, `status`. PID `/tmp/arduino-relay.pid`, socket as above, log `/tmp/arduino-daemon.log` with `start_daemon.sh`.
 
-### 7.3 When to restart the daemon
+### 7.3 Self-healing after power events {: #self-healing }
 
-Restart is **not** part of normal operation. Do it when the serial device behind `/dev/arduino-relay` was recreated while the daemon kept an old file descriptor open.
+#### Observed failure
 
-| Trigger | What happens |
-|---------|----------------|
-| USB hub unplugged or host USB port power-cycled | The kernel removes and re-adds the tty device; the daemon still writes to a dead FD. |
-| Physical USB cable swap or Arduino re-enumeration | Same as above. |
+After a power outage (or USB hub reset), the Arduino or its serial adapter re-enumerates. The kernel recreates `/dev/arduino-relay`, but the daemon keeps writing to the **old file descriptor** opened at startup.
 
-Typical symptom: `arduino_relay_control.py status` (or any relay command) fails with **`Input/output error`** (often errno 5) while `systemctl status arduino-relay-daemon` still shows **active (running)** and the Unix socket exists.
+| Symptom | Meaning |
+|---------|---------|
+| `systemctl status arduino-relay-daemon` shows **active (running)** | Process never exited |
+| `arduino_relay_control.py status` (or any relay command) fails with **`Input/output error`** (errno 5) | Stale serial link |
+| CI / Labgrid power commands fail | PDUDaemon cannot reach the relays |
+
+`Restart=on-failure` alone does not fix this: systemd only restarts when the process **exits**. A zombie daemon stays alive with a dead FD until someone runs `systemctl restart` manually.
+
+#### Recovery mechanisms
+
+Two mechanisms recover automatically from power outages and USB glitches:
+
+| Mechanism | How it works |
+|-----------|-------------|
+| **Heartbeat** (daemon code) | Every 30 s of inactivity, the daemon sends `ID` to the Arduino. If the serial link returns an I/O error, the daemon exits with code 1, and systemd restarts it via `Restart=on-failure`. |
+| **BindsTo** (systemd unit) | The service is bound to `dev-arduino\x2drelay.device`. If the USB device disappears (hub reset, cable swap), systemd stops the service immediately. When udev re-creates `/dev/arduino-relay`, systemd starts the daemon again. |
+
+Both mechanisms complement each other: `BindsTo` covers USB disconnect/reconnect (device disappears from the kernel), while the heartbeat covers scenarios where the USB device stays present but the MCU resets or the serial link becomes stale (errno 5 `Input/output error`).
+
+`StartLimitBurst=10` within `StartLimitIntervalSec=300` prevents restart loops if the hardware is truly broken.
+
+### 7.4 When manual restart is still needed
+
+If the heartbeat and `BindsTo` already recovered the daemon, no manual action is required. Manual restart may still be needed if the daemon reached the restart limit (10 starts in 5 minutes):
 
 ```bash
-sudo systemctl restart arduino-relay-daemon
+sudo systemctl reset-failed arduino-relay-daemon
+sudo systemctl start arduino-relay-daemon
 arduino_relay_control.py status
 ```
 

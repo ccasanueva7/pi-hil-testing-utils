@@ -121,15 +121,37 @@ class ArduinoRelayDaemon:
             logger.error(f"Failed to create socket: {e}")
             return False
 
+    def _heartbeat(self) -> bool:
+        """Send ID command to verify the serial link is alive."""
+        try:
+            with self.arduino_lock:
+                self.arduino.write(b"ID\n")
+                self.arduino.flush()
+                response = self.arduino.readline().decode('utf-8', errors='ignore')
+                return "RELAY-CTRL" in response
+        except (OSError, serial.SerialException) as e:
+            logger.error(f"Heartbeat failed: {e}")
+            return False
+
     def _main_loop(self):
+        HEARTBEAT_INTERVAL_S = 30
+        ticks_since_heartbeat = 0
+
         while self.running:
             try:
                 self.server_socket.settimeout(1.0)
                 try:
                     client, _ = self.server_socket.accept()
+                    ticks_since_heartbeat = 0
                     threading.Thread(target=self._handle_client, args=(client,), daemon=True).start()
                 except socket.timeout:
-                    continue
+                    ticks_since_heartbeat += 1
+                    if ticks_since_heartbeat >= HEARTBEAT_INTERVAL_S:
+                        ticks_since_heartbeat = 0
+                        if not self._heartbeat():
+                            logger.error("Serial link dead, exiting for systemd restart")
+                            self.running = False
+                            break
             except Exception as e:
                 if self.running:
                     logger.error(f"Main loop error: {e}")
