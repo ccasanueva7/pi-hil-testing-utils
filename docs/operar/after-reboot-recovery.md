@@ -149,13 +149,15 @@ sudo systemctl start arduino-relay-daemon
 
 ### Managed switch (TP-Link SG2016P)
 
-The managed switch may factory-reset on power loss, returning to default IP `192.168.0.1` with credentials `admin/admin` and no VLAN configuration. Recovery procedure:
+After a hard power cut, the switch may **look** factory-reset (default IP `192.168.0.1`, flat VLAN 1) even when the hardware did not reset: TP-Link JetStream keeps CLI changes in RAM until `copy running-config startup-config`. See [Observed failure](../configuracion/switch-config.md#config-persistence). Current `switch-vlan` saves to flash automatically after each change.
 
-1. Disconnect all DUT cables from the switch, leave only gateway and laptop connected.
-2. Access the web UI at `http://192.168.0.1`, log in with `admin/admin`.
+If the switch still shows defaults, recovery procedure:
+
+1. Disconnect all DUT cables from the switch, leave only gateway and laptop connected (avoids `192.168.1.1` conflicts on flat VLAN 1).
+2. Access the web UI at `http://192.168.0.1`, log in with factory credentials.
 3. Change credentials to the lab-standard ones.
 4. Re-enable SSH if disabled.
-5. Run `switch-vlan --init` from the lab host (or reconfigure VLANs manually).
+5. Run `switch-vlan --init` from the lab host (applies topology and saves to flash).
 6. Reconnect DUT cables.
 
 After reconfiguration, verify with `switch_healthcheck.py`:

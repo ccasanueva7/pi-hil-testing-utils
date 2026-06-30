@@ -87,6 +87,41 @@ Testbed VLAN configuration is **not done manually** on the switch; these tools a
 
 Day-to-day: [Routine operations - Dynamic VLAN](../operar/lab-routine-operations.md#dynamic-vlan-and-switch-vlan) (`switch-vlan` / [labgrid-switch-abstraction](https://github.com/fcefyn-testbed/labgrid-switch-abstraction); design: [Lab architecture](../diseno/lab-architecture.md)).
 
+### 4.1 Config persistence {: #config-persistence }
+
+#### Observed failure
+
+After a power outage or switch reboot, the lab appeared to have **lost all VLAN configuration** (default IP `192.168.0.1`, factory credentials, flat VLAN 1). CI tests failed because DUTs received DHCP from the wrong segment and TFTP targeted the wrong server IP.
+
+The switch had **not** necessarily performed a true factory reset. On TP-Link JetStream (SG2016P), changes applied via CLI or web UI **Apply** land in **running-config** (RAM) only. They are lost on reboot unless explicitly saved to **startup-config** (flash) with:
+
+- Web UI: **Save Config** (separate from Apply)
+- CLI: `copy running-config startup-config`
+
+Before the fix, `switch-vlan --init` and other VLAN commands updated running-config but **never saved to flash**. Every power cycle looked like a factory reset even though the root cause was missing persistence.
+
+| Symptom after reboot | Likely cause |
+|--------------------|--------------|
+| Default IP `192.168.0.1`, VLAN 1 flat, `admin`/empty password | Startup-config never saved (most common in this lab) |
+| Web UI unreachable with DUT cables connected | IP conflict: all DUTs default to `192.168.1.1` on flat VLAN 1 |
+| True factory reset (Reset button, firmware bug) | Rare; same recovery procedure, but SSH/password must be reconfigured manually |
+
+#### Automatic save (current behavior)
+
+`labgrid-switch-abstraction` runs `copy running-config startup-config` after every successful `send_config_commands()` session (driver `save_command()` in `tplink_jetstream.py`). Log line to expect:
+
+```text
+Configuration saved to startup-config
+```
+
+This applies to `switch-vlan --init`, per-DUT VLAN changes, and `--restore-all`. After upgrading the package, run `switch-vlan --init` once to apply and persist the full topology.
+
+!!! note "Manual save still required for web UI changes"
+    Changes made only through the switch web UI still need **Save Config** in the UI. The automatic save covers CLI operations via `switch-vlan` and `SwitchClient`.
+
+!!! warning "SSH and password are not automated"
+    The TP-Link SG2016P does not expose password or SSH configuration via its CLI. After a **true** factory reset, enabling SSH and setting the admin password must be done manually through the web interface.
+
 !!! note "Manual configuration (reference)"
     For recovery or debug: one test VLAN per access port (untagged); trunk ports with all VLANs tagged; PVID and ingress as in §2 (Admit All).
 
@@ -234,9 +269,11 @@ The `%vlanXXX` in `address` must match the DUT port **VLAN ID** on the switch; t
 
 ---
 
-## 7. Recovery after factory reset {: #recovery-after-factory-reset }
+## 7. Recovery after config loss {: #recovery-after-factory-reset }
 
-If the switch loses its configuration (factory reset, firmware update, power event), follow this procedure to restore the testbed VLAN topology from the declarative `dut-config.yaml`.
+If the switch loses its VLAN topology (power event, unsaved config, true factory reset, or firmware update), follow this procedure to restore the testbed from declarative `dut-config.yaml`.
+
+Most power outages in this lab were **config loss from RAM**, not hardware factory reset. After deploying [config persistence](#config-persistence), a normal reboot should keep VLANs. Use this section when the switch still shows defaults (`192.168.0.1`, flat VLAN 1) or `switch_healthcheck.py` reports mismatches.
 
 ### Prerequisites
 
@@ -272,7 +309,7 @@ If the switch loses its configuration (factory reset, firmware update, power eve
     switch-vlan --init
     ```
 
-    This creates all VLANs (100-107, 200), configures every DUT access port (untagged + PVID), and sets uplink/trunk ports (9, 10) to carry all VLANs tagged. The command is **idempotent**: safe to re-run on an already-configured switch.
+    This creates all VLANs (100-107, 200), configures every DUT access port (untagged + PVID), and sets uplink/trunk ports (9, 10) to carry all VLANs tagged. The command is **idempotent**: safe to re-run on an already-configured switch. With current `labgrid-switch-abstraction`, it also runs `copy running-config startup-config` (log: `Configuration saved to startup-config`).
 
 7. **Reconnect DUT cables** to their assigned ports (see [port mapping](#31-assignment-table)).
 
@@ -288,8 +325,11 @@ If the switch loses its configuration (factory reset, firmware update, power eve
     done
     ```
 
+!!! warning "Why disconnect DUT cables first"
+    With factory defaults, all switch ports sit on VLAN 1. Every DUT boots with `192.168.1.1`. Multiple identical IPs on one broadcast domain can make the switch management UI unreachable or unstable until cables are removed and the switch is reconfigured.
+
 !!! warning "SSH and password are not automated"
-    The TP-Link SG2016P does not expose password or SSH configuration via its CLI. After a factory reset, enabling SSH and setting the admin password must be done manually through the web interface. Everything else (VLANs, ports, trunks, PVIDs) is restored by `switch-vlan --init`.
+    The TP-Link SG2016P does not expose password or SSH configuration via its CLI. After a **true** factory reset, enabling SSH and setting the admin password must be done manually through the web interface. VLANs, ports, trunks, and PVIDs are restored by `switch-vlan --init` (and persisted to flash automatically).
 
 ### PVID healthcheck
 
