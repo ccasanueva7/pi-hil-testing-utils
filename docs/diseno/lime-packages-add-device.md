@@ -40,7 +40,7 @@ Before adding a device to the matrix:
 
 [toh]: https://openwrt.org/toh/start
 [dut]: ../operar/dut-onboarding.md
-[lr-readme]: https://github.com/fcefyn-testbed/libremesh-tests/blob/staging/README.md
+[lr-readme]: https://github.com/fcefyn-testbed/libremesh-tests/blob/main/README.md
 
 ---
 
@@ -155,7 +155,7 @@ For most boards, copy an existing similar entry and adjust. Examples:
 ## 4. Add the labgrid environment
 
 The CI workflow (`lime-packages`) checks out
-`fcefyn-testbed/libremesh-tests@staging` during each test job
+`fcefyn-testbed/libremesh-tests@main` during each test job
 (see [two-repo model][two-repo]). That repo owns all test definitions;
 `lime-packages` owns the workflow and the matrix. If you want CI to
 actually boot the new board:
@@ -168,7 +168,7 @@ actually boot the new board:
    command is `labgrid-client -p labgrid-fcefyn-<place> lock`.
 3. Confirm `aparcar/openwrt-tests` `labnet.yaml` lists the new device
    if any cross-test references it.
-4. Merge the `libremesh-tests` PR to `staging` **before** enabling
+4. Merge the `libremesh-tests` PR to `main` **before** enabling
    `test_firmware: true` on the `targets.yml` entry, otherwise the CI
    workflow will fail looking for `targets/<device>.yaml`.
 

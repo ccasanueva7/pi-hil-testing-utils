@@ -152,7 +152,7 @@ def pytest_collection_modifyitems(config, items):
             item.add_marker(skip_mesh)
 ```
 
-Lives in `fcefyn-testbed/libremesh-tests@staging`. Any future opt-in
+Lives in `fcefyn-testbed/libremesh-tests@main`. Any future opt-in
 mechanism needs the same early-return treatment.
 
 ### KVM on hosted runners

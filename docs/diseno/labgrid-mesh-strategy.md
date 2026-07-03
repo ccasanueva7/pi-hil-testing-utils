@@ -1,6 +1,6 @@
 # Labgrid mesh strategy and orchestration
 
-Design-level description of how [libremesh-tests](https://github.com/fcefyn-testbed/libremesh-tests) (branch `staging`) extends the vanilla [openwrt-tests](https://github.com/aparcar/openwrt-tests) Labgrid boot path for **multi-node mesh** tests: state machines for the custom strategies, contrast with upstream `UBootTFTPStrategy`, and the **pytest plus Labgrid** session flow (VLAN switch, parallel subprocess booters, teardown). Intended for maintainers and for thesis or project report background, not for day-to-day testbed operators.
+Design-level description of how [libremesh-tests](https://github.com/fcefyn-testbed/libremesh-tests) (branch `main`) extends the vanilla [openwrt-tests](https://github.com/aparcar/openwrt-tests) Labgrid boot path for **multi-node mesh** tests: state machines for the custom strategies, contrast with upstream `UBootTFTPStrategy`, and the **pytest plus Labgrid** session flow (VLAN switch, parallel subprocess booters, teardown). Intended for maintainers and for thesis or project report background, not for day-to-day testbed operators.
 
 Suite-specific code stays in **libremesh-tests**; this page links to paths there and to upstream blobs on GitHub.
 
@@ -49,7 +49,7 @@ stateDiagram-v2
 
 ---
 
-## 3. libremesh-tests `UBootTFTPStrategy` (staging)
+## 3. libremesh-tests `UBootTFTPStrategy` (main)
 
 Source: [`strategies/tftpstrategy.py`](https://github.com/fcefyn-testbed/libremesh-tests/blob/main/strategies/tftpstrategy.py).
 
@@ -89,7 +89,7 @@ The outer `Status` enum still has `uboot` and `shell`; the flowchart shows the s
 
 ## 4. Side-by-side: upstream vs libremesh-tests `UBootTFTPStrategy`
 
-| Topic | openwrt-tests main | libremesh-tests staging |
+| Topic | openwrt-tests main | libremesh-tests main |
 |-------|---------------------|-------------------------|
 | States | `unknown`, `off`, `uboot`, `shell` | Same |
 | `off` | Console off, power off | Same |
@@ -246,7 +246,7 @@ When `LG_MESH_PLACES` is set, `mesh_vlan_single` returns early so it does not do
 
 ## 10. Source pointers
 
-**libremesh-tests (staging)**
+**libremesh-tests (main)**
 
 - [`strategies/tftpstrategy.py`](https://github.com/fcefyn-testbed/libremesh-tests/blob/main/strategies/tftpstrategy.py) - `UBootTFTPStrategy`
 - [`strategies/qemunetworkstrategy_libremesh.py`](https://github.com/fcefyn-testbed/libremesh-tests/blob/main/strategies/qemunetworkstrategy_libremesh.py) - QEMU LibreMesh
