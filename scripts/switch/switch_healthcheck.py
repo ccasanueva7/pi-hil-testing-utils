@@ -21,7 +21,6 @@ import logging
 import sys
 
 from switch_abstraction.client import SwitchClient
-from switch_abstraction.constants import VLAN_SHARED, default_dut_config_path
 from switch_abstraction.vlan_manager import (
     get_default_pool,
     get_vlan_shared,
