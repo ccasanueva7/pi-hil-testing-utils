@@ -15,16 +15,17 @@ from typing import Dict, Any, Optional
 
 import serial
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
 class ArduinoRelayDaemon:
-    def __init__(self,
-                 arduino_port: str = "/dev/arduino-relay",
-                 socket_path: str = "/tmp/arduino-relay.sock",
-                 pidfile: str = "/tmp/arduino-relay.pid"):
-
+    def __init__(
+        self,
+        arduino_port: str = "/dev/arduino-relay",
+        socket_path: str = "/tmp/arduino-relay.sock",
+        pidfile: str = "/tmp/arduino-relay.pid",
+    ):
         self.arduino_port = arduino_port
         self.socket_path = socket_path
         self.pidfile = pidfile
@@ -63,7 +64,7 @@ class ArduinoRelayDaemon:
             return False
 
         # Write PID
-        with open(self.pidfile, 'w') as f:
+        with open(self.pidfile, "w") as f:
             f.write(str(os.getpid()))
 
         # Signal handlers
@@ -78,11 +79,7 @@ class ArduinoRelayDaemon:
 
     def _connect_arduino(self) -> bool:
         try:
-            self.arduino = serial.Serial(
-                port=self.arduino_port,
-                baudrate=115200,
-                timeout=2.0
-            )
+            self.arduino = serial.Serial(port=self.arduino_port, baudrate=115200, timeout=2.0)
 
             # Wait for initial reset (only once)
             time.sleep(3)
@@ -91,7 +88,7 @@ class ArduinoRelayDaemon:
 
             # Verify connection
             self.arduino.write(b"ID\n")
-            response = self.arduino.readline().decode('utf-8', errors='ignore')
+            response = self.arduino.readline().decode("utf-8", errors="ignore")
 
             if "RELAY-CTRL" in response:
                 logger.info(f"Arduino connected: {response.strip()}")
@@ -121,15 +118,37 @@ class ArduinoRelayDaemon:
             logger.error(f"Failed to create socket: {e}")
             return False
 
+    def _heartbeat(self) -> bool:
+        """Send ID command to verify the serial link is alive."""
+        try:
+            with self.arduino_lock:
+                self.arduino.write(b"ID\n")
+                self.arduino.flush()
+                response = self.arduino.readline().decode("utf-8", errors="ignore")
+                return "RELAY-CTRL" in response
+        except (OSError, serial.SerialException) as e:
+            logger.error(f"Heartbeat failed: {e}")
+            return False
+
     def _main_loop(self):
+        HEARTBEAT_INTERVAL_S = 30
+        ticks_since_heartbeat = 0
+
         while self.running:
             try:
                 self.server_socket.settimeout(1.0)
                 try:
                     client, _ = self.server_socket.accept()
+                    ticks_since_heartbeat = 0
                     threading.Thread(target=self._handle_client, args=(client,), daemon=True).start()
                 except socket.timeout:
-                    continue
+                    ticks_since_heartbeat += 1
+                    if ticks_since_heartbeat >= HEARTBEAT_INTERVAL_S:
+                        ticks_since_heartbeat = 0
+                        if not self._heartbeat():
+                            logger.error("Serial link dead, exiting for systemd restart")
+                            self.running = False
+                            break
             except Exception as e:
                 if self.running:
                     logger.error(f"Main loop error: {e}")
@@ -139,9 +158,9 @@ class ArduinoRelayDaemon:
             with client:
                 data = client.recv(1024)
                 if data:
-                    request = json.loads(data.decode('utf-8'))
+                    request = json.loads(data.decode("utf-8"))
                     response = self._execute_command(request.get("command", ""))
-                    client.send(json.dumps(response).encode('utf-8'))
+                    client.send(json.dumps(response).encode("utf-8"))
         except Exception as e:
             logger.error(f"Client error: {e}")
 
@@ -151,13 +170,13 @@ class ArduinoRelayDaemon:
 
         try:
             with self.arduino_lock:
-                self.arduino.write(f"{command}\n".encode('utf-8'))
+                self.arduino.write(f"{command}\n".encode("utf-8"))
                 self.arduino.flush()
 
                 # Read response
                 lines = []
                 for _ in range(10):
-                    line = self.arduino.readline().decode('utf-8', errors='ignore').strip()
+                    line = self.arduino.readline().decode("utf-8", errors="ignore").strip()
                     if line:
                         lines.append(line)
                         if any(term in line for term in ["STATUS", "ERR", "OK", "RELAY-CTRL"]):
@@ -165,7 +184,7 @@ class ArduinoRelayDaemon:
                     else:
                         break
 
-                response = '\n'.join(lines)
+                response = "\n".join(lines)
                 success = response and "ERR" not in response
 
                 return {"success": success, "response": response}
@@ -191,7 +210,7 @@ class ArduinoRelayDaemon:
         if not os.path.exists(self.pidfile):
             return False
         try:
-            with open(self.pidfile, 'r') as f:
+            with open(self.pidfile, "r") as f:
                 pid = int(f.read().strip())
             os.kill(pid, 0)  # Check if process exists
             return True
@@ -216,7 +235,7 @@ def main():
             sys.exit(1)
     elif args.action == "stop":
         try:
-            with open("/tmp/arduino-relay.pid", 'r') as f:
+            with open("/tmp/arduino-relay.pid", "r") as f:
                 pid = int(f.read().strip())
             os.kill(pid, signal.SIGTERM)
             print("Stop signal sent")

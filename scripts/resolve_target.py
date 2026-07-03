@@ -36,7 +36,7 @@ def _default_labnet_path() -> Path:
 
     odir = os.environ.get("OPENWRT_TESTS_DIR", "").strip()
     if odir:
-        p = (Path(os.path.expanduser(odir)).resolve() / "labnet.yaml")
+        p = Path(os.path.expanduser(odir)).resolve() / "labnet.yaml"
         if not p.is_file():
             print(
                 f"Error: OPENWRT_TESTS_DIR set but labnet.yaml not found: {p}",

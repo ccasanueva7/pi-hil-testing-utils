@@ -21,7 +21,7 @@ The test infrastructure is deliberately split across two repositories:
 | `fcefyn-testbed/lime-packages` | The CI workflow (`.github/workflows/build-firmware.yml`), the build scripts, and the matrix config. This is the fork of `libremesh/lime-packages`. |
 | `fcefyn-testbed/libremesh-tests` | The pytest test suite (`tests/test_libremesh.py`, `test_mesh.py`, etc.), labgrid environment files (`targets/<device>.yaml`), and the `uv` project that pins test dependencies. |
 
-The workflow checks out `libremesh-tests@staging` during each test
+The workflow checks out `libremesh-tests@main` during each test
 job and calls `uv run pytest` from there. No test code lives inside
 `lime-packages` itself.
 
@@ -66,7 +66,7 @@ The upstream `libremesh/lime-packages` workflow can still check out
 - uses: actions/checkout@v6
   with:
     repository: fcefyn-testbed/libremesh-tests
-    ref: staging
+    ref: main
     path: libremesh-tests
 ```
 
@@ -87,12 +87,13 @@ final state is:
 - `fcefyn-testbed/lime-packages` goes back to tracking upstream with
   only testbed-specific device entries in `targets.yml`.
 
-### Pinned branch (`staging`)
+### Pinned branch (`main`)
 
-The workflow always checks out `libremesh-tests@staging`. This is the
-integration branch where reviewed test improvements land before going
-to `main`. Using a named branch (not a SHA) means test fixes propagate
-automatically to the next CI run without a `lime-packages` PR.
+The workflow always checks out `libremesh-tests@main`, the production
+branch. Test fixes are merged to `main` via PR (branch protection
+requires it) and, because the workflow tracks a named branch rather
+than a SHA, propagate automatically to the next CI run without a
+`lime-packages` PR.
 
 ---
 
@@ -132,7 +133,7 @@ flowchart LR
 | Step      | What happens                                                      |
 |-----------|-------------------------------------------------------------------|
 | Artifacts | `build-image` uploads `firmware-<device>-<release>` per matrix.   |
-| Checkout  | `libremesh-tests@staging`, `aparcar/openwrt-tests@main`.          |
+| Checkout  | `libremesh-tests@main`, `aparcar/openwrt-tests@main`.             |
 | Staging   | Firmware copied to `/srv/tftp/firmwares/ci/<run_id>/<place>/<release>/` (single-node), `.../mesh/<release>/`, or `.../mesh-pairs/<pair>/<release>/`. Per-job staging dirs avoid races. |
 | Single    | Per place: lock `labgrid-fcefyn-<place>`, set `LG_IMAGE`, run `pytest tests/test_libremesh.py`. |
 | Mesh      | `test-mesh`: stage every device the mesh shape needs, set `LG_MESH_PLACES` + `LG_IMAGE_MAP`, run `pytest tests/test_mesh.py`. |
@@ -260,13 +261,11 @@ manages GitHub issues for failing devices:
 | Test passes, issue open | Comments "passed" and closes the issue. |
 
 Each issue body contains a metadata table (place, device, release, run
-link, date) and the output of `lime-report.sh` (sections with `### FILE`
-/ `### CMD` headers) inside a collapsible `<details>` block. Upstream
-[PR #1242](https://github.com/libremesh/lime-packages/pull/1242) adds a
-`-m` flag; this fork invokes the script without flags until that lands.
+link, date) and the output of `lime-report -m` (markdown sections with
+`### FILE` / `### CMD` headers) inside a collapsible `<details>` block.
 
 `lime-report` is collected from the DUT **before** poweroff/unlock via
-`labgrid-client ssh -- lime-report.sh` with `LG_PROXY` and `LG_ENV` set.
+`labgrid-client ssh -- lime-report -m` with `LG_PROXY` and `LG_ENV` set.
 If SSH fails or the command is missing, a fallback message plus
 `labgrid-client` stderr is stored instead.
 

@@ -17,6 +17,7 @@ systemctl is-active \
   pdudaemon \
   ser2net \
   dnsmasq \
+  arduino-relay-daemon \
   prometheus \
   grafana-server
 ```
@@ -118,8 +119,49 @@ This verifies the coordinator, exporter, and `pdudaemon` chain end-to-end withou
 
 If the host went down ungracefully (UPS empty, plug pulled), additionally check:
 
-- `df -h` — no filesystem read-only.
-- `dmesg | grep -i 'i/o error\|EXT4-fs error'` — no disk errors.
-- `lsblk` — all expected disks present.
+- `df -h` - no filesystem read-only.
+- `dmesg | grep -i 'i/o error\|EXT4-fs error'` - no disk errors.
+- `lsblk` - all expected disks present.
 
 If the root filesystem went read-only, fix the underlying disk issue before bringing services back up.
+
+### Arduino relay daemon
+
+After a hard power cut, the daemon may keep a stale serial connection while still reporting **active (running)**; relay commands then fail with **`Input/output error`**. See [Observed failure](../configuracion/arduino-relay.md#self-healing) for the full symptom table. Recovery uses heartbeat, `BindsTo`, and udev `SYSTEMD_WANTS` ([Self-healing](../configuracion/arduino-relay.md#self-healing)). Verify:
+
+```sh
+arduino_relay_control.py status
+```
+
+If it reports `Input/output error` or the service is `failed`:
+
+```sh
+sudo systemctl restart arduino-relay-daemon
+arduino_relay_control.py status
+```
+
+If the restart limit was reached:
+
+```sh
+sudo systemctl reset-failed arduino-relay-daemon
+sudo systemctl start arduino-relay-daemon
+```
+
+### Managed switch (TP-Link SG2016P)
+
+After a hard power cut, the switch may **look** factory-reset (default IP `192.168.0.1`, flat VLAN 1) even when the hardware did not reset: TP-Link JetStream keeps CLI changes in RAM until `copy running-config startup-config`. See [Observed failure](../configuracion/switch-config.md#config-persistence). Current `switch-vlan` saves to flash automatically after each change.
+
+If the switch still shows defaults, recovery procedure:
+
+1. Disconnect all DUT cables from the switch, leave only gateway and laptop connected (avoids `192.168.1.1` conflicts on flat VLAN 1).
+2. Access the web UI at `http://192.168.0.1`, log in with factory credentials.
+3. Change credentials to the lab-standard ones.
+4. Re-enable SSH if disabled.
+5. Run `switch-vlan --init` from the lab host (applies topology and saves to flash).
+6. Reconnect DUT cables.
+
+After reconfiguration, verify with `switch_healthcheck.py`:
+
+```sh
+switch_healthcheck.py
+```

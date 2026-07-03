@@ -237,14 +237,16 @@ def load_dut_list(config_path: Path) -> list[dict]:
         ip = hw.get("libremesh_fixed_ip")
         vlan = hw.get("switch_vlan_isolated")
         if port and ip and vlan:
-            result.append({
-                "id": dut_id,
-                "serial_port": port,
-                "serial_speed": int(hw.get("serial_speed", 115200)),
-                "switch_vlan_isolated": int(vlan),
-                "libremesh_fixed_ip": ip,
-                "device_type": hw.get("device_type", ""),
-            })
+            result.append(
+                {
+                    "id": dut_id,
+                    "serial_port": port,
+                    "serial_speed": int(hw.get("serial_speed", 115200)),
+                    "switch_vlan_isolated": int(vlan),
+                    "libremesh_fixed_ip": ip,
+                    "device_type": hw.get("device_type", ""),
+                }
+            )
     return result
 
 
@@ -264,7 +266,10 @@ def find_dut_by_device(device: str, config_path: Path) -> dict | None:
 
 
 def _run_commands(
-    ser: serial.Serial, commands: list[str], dut_id: str, timeout: float = 4.0,
+    ser: serial.Serial,
+    commands: list[str],
+    dut_id: str,
+    timeout: float = 4.0,
 ) -> None:
     """Send a list of commands, warning on errors."""
     for cmd in commands:
@@ -418,7 +423,9 @@ def main() -> int:
             print("Close any screen/minicom sessions on these ports first.\n")
         ok = 0
         for dut in duts:
-            if provision_one(dut, dry_run=args.dry_run, skip_mesh_ip=args.skip_mesh_ip, skip_internet=args.skip_internet):
+            if provision_one(
+                dut, dry_run=args.dry_run, skip_mesh_ip=args.skip_mesh_ip, skip_internet=args.skip_internet
+            ):
                 ok += 1
             if not args.dry_run:
                 time.sleep(0.5)

@@ -84,7 +84,7 @@ Useful to spot patterns ("this device fails every Sunday after the cron run").
 On `schedule` runs, `test-firmware` opens a `CI healthcheck: <place> (<release>)` issue when it fails. The issue body has:
 
 - Metadata table (place, device, release, run link, date).
-- `lime-report.sh` output from the DUT (configs, dmesg, network, mesh tables) inside a `<details>` block.
+- `lime-report` output from the DUT (configs, dmesg, network, mesh tables) inside a `<details>` block.
 
 The issue reopens on subsequent failures and adds a comment with each new failure. Once the device passes again, the issue auto-closes with a "passed" comment.
 

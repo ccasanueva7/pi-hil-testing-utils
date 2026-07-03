@@ -360,6 +360,8 @@ sudo cp configs/templates/99-serial-devices.rules /etc/udev/rules.d/
 sudo udevadm control --reload-rules && sudo udevadm trigger
 ```
 
+The Arduino rule also sets `ENV{SYSTEMD_WANTS}="arduino-relay-daemon.service"` so the relay daemon starts when `/dev/arduino-relay` appears after USB reconnect. Detail: [arduino-relay - Self-healing](arduino-relay.md#self-healing).
+
 ### 7.1 Adapter models
 
 | Chip   | Vendor:Product | Vendor               | Unique serial |

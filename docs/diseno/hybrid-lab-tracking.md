@@ -46,11 +46,11 @@ Last updated: March 2026
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| `labgrid-exporter` running (openwrt pool) | ✅ | Connected to upstream coordinator |
+| `labgrid-exporter` running (openwrt pool) | ✅ | Connected to local coordinator (loopback :20408) |
 | `labgrid-exporter` running (libremesh pool) | 🔄 | Local coordinator setup in progress |
 | `places.yaml` for OpenWrt DUTs | ✅ | |
 | `places.yaml` for LibreMesh DUTs | 🔄 | IP addresses pending fixed-IP provisioning |
-| FCEFyN lab registered in upstream coordinator | 🔄 | PR open for multiple device model instances |
+| FCEFyN lab registered in labnet.yaml (upstream SSH gateway) | ✅ | PRs #219 and #228 merged |
 
 ---
 
@@ -106,5 +106,5 @@ Last updated: March 2026
 3. **virtual_mesh_launcher.py** — implement launcher script, test 2-node virtual mesh
 4. **libremesh-tests multi-node fixture** — implement `mesh_nodes_virtual` fixture in fork
 5. **virtual-mesh.yml workflow** — wire up CI for GitHub-hosted runners
-6. **Register FCEFyN lab in upstream coordinator** — close PR for multiple device model instances
+6. **Register FCEFyN lab in labnet.yaml** — done: PRs #219 and #228 merged in aparcar/openwrt-tests
 7. **Hybrid mode pool-manager** — finalize differential VLAN apply, test simultaneous pools

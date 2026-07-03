@@ -90,9 +90,10 @@ Artifacts are kept for 7 days. For automated end-to-end runs, trigger the workfl
 ## Remote coordinator access (openwrt-tests)
 
 ```bash
-# Aparcar coordinator is in the cloud; exporter does the work
-# LG_COORDINATOR is set in CI runner env (HOST:PORT, gRPC - Labgrid 25.0+)
-export LG_COORDINATOR=coordinator.aparcar.org:20408
+# The coordinator runs locally on the lab host (loopback :20408).
+# GitHub-hosted openwrt-tests runners reach it via LG_PROXY (SSH tunnel through the upstream VM).
+# LG_PROXY is set in the CI runner env.
+export LG_PROXY=ssh://labgrid-coordinator:51818
 
 # List available places
 labgrid-client places

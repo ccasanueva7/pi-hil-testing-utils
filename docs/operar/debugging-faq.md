@@ -9,8 +9,8 @@ Common problems and solutions when running tests on the FCEFyN testbed.
 ### `labgrid-client places` returns no places or an empty list
 
 - Check that `labgrid-exporter` is running on the lab host: `systemctl status labgrid-exporter`
-- Check that `labgrid-coordinator` is running on the VM: `systemctl status labgrid-coordinator`
-- Verify WireGuard connectivity: `ping <lab-host-wg-ip>` from the VM
+- Check that `labgrid-coordinator` is running on the lab host: `systemctl status labgrid-coordinator`
+- Verify WireGuard connectivity from the lab host to the upstream VM: `ping <upstream-vm-wg-ip>`
 
 ### `labgrid-client lock` hangs or times out
 

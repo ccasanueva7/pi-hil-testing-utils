@@ -147,11 +147,12 @@ References:
 | `fit`           | mediatek-filogic, mediatek-mt7622  | `*-initramfs-libremesh.itb` (FIT)           |
 | `x86-combined`  | qemu_x86_64                        | `*-ext4-combined.img` (GRUB + kernel + ext4) |
 
-!!! note "ath79 / LibreRouter v1 — not in the CI matrix"
-    The `multi-uimage` format was prototyped for ath79 (LibreRouter v1) but removed from `targets.yml`.
-    ImageBuilder for ath79/generic does not emit a `KERNEL_INITRAMFS` artifact, and the LibreRouter U-Boot fork does not propagate the initrd sub-image to the kernel.
-    The only viable path is a full source build (~50–60 min cold), which was discarded as a CI blocker.
-    See [ImageBuilder limits](lime-packages/imagebuilder-limits.md) for the full investigation.
+!!! note "ath79 / LibreRouter v1 - dual-TFTP format"
+    LibreRouter v1 uses `IMAGE_FORMAT=dual-tftp` instead of FIT or multi-uimage.
+    The CI ships kernel.bin + rootfs.uimage (uImage-wrapped CPIO) as separate TFTP artifacts;
+    U-Boot loads both and `bootm <kernel> <ramdisk>` passes initrd natively via the
+    MIPS boot parameter block (not via kernel command line), bypassing
+    `CONFIG_MIPS_CMDLINE_FROM_DTB`. See [ImageBuilder limits](lime-packages/imagebuilder-limits.md).
 
 `BUILD_INITRAMFS=1` repacks the ImageBuilder rootfs into a RAM-bootable
 artifact (`kernel-bin` + DTB + CPIO ramdisk). Targets with

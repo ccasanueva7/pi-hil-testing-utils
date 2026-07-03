@@ -166,19 +166,64 @@ sudo systemctl daemon-reload && sudo systemctl enable --now arduino-relay-daemon
 
 Daemon commands: `start`, `stop`, `status`. PID `/tmp/arduino-relay.pid`, socket as above, log `/tmp/arduino-daemon.log` with `start_daemon.sh`.
 
-### 7.3 When to restart the daemon
+### 7.3 Self-healing after power events {: #self-healing }
 
-Restart is **not** part of normal operation. Do it when the serial device behind `/dev/arduino-relay` was recreated while the daemon kept an old file descriptor open.
+#### Observed failure
 
-| Trigger | What happens |
-|---------|----------------|
-| USB hub unplugged or host USB port power-cycled | The kernel removes and re-adds the tty device; the daemon still writes to a dead FD. |
-| Physical USB cable swap or Arduino re-enumeration | Same as above. |
+After a power outage (or USB hub reset), the Arduino or its serial adapter re-enumerates. The kernel recreates `/dev/arduino-relay`, but the daemon keeps writing to the **old file descriptor** opened at startup.
 
-Typical symptom: `arduino_relay_control.py status` (or any relay command) fails with **`Input/output error`** (often errno 5) while `systemctl status arduino-relay-daemon` still shows **active (running)** and the Unix socket exists.
+| Symptom | Meaning |
+|---------|---------|
+| `systemctl status arduino-relay-daemon` shows **active (running)** | Process never exited |
+| `arduino_relay_control.py status` (or any relay command) fails with **`Input/output error`** (errno 5) | Stale serial link |
+| CI / Labgrid power commands fail | PDUDaemon cannot reach the relays |
+
+`Restart=on-failure` alone does not fix this: systemd only restarts when the process **exits**. A zombie daemon stays alive with a dead FD until someone runs `systemctl restart` manually.
+
+#### Recovery mechanisms
+
+Three pieces work together after power outages and USB glitches:
+
+| Mechanism | Where | What it does |
+|-----------|-------|--------------|
+| **Heartbeat** | `arduino_daemon.py` | Every 30 s of inactivity, sends `ID` to the Arduino. On I/O error, the daemon exits with code 1; `Restart=on-failure` starts a fresh process with a new serial FD. |
+| **BindsTo** | `arduino-relay-daemon.service` | Binds to `dev-arduino\x2drelay.device`. When the USB device disappears, systemd **stops** the service. It does **not** start it again when the device reappears. |
+| **SYSTEMD_WANTS** | `99-serial-devices.rules` (Arduino rule) | When udev creates `/dev/arduino-relay`, it tells systemd to **start** `arduino-relay-daemon.service`. |
+
+```udev
+# Arduino rule (excerpt) - configs/templates/99-serial-devices.rules
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="A5069RR4", \
+  SYMLINK+="arduino-relay", ..., \
+  TAG+="systemd", ENV{SYSTEMD_WANTS}="arduino-relay-daemon.service"
+```
+
+| Scenario | Heartbeat | BindsTo | SYSTEMD_WANTS |
+|----------|-----------|---------|---------------|
+| Stale FD, device node still present | Detects and exits | - | - |
+| USB unplug / hub reset | - | Stops daemon | Starts daemon on reconnect |
+| Full power cut (host stays up) | May detect stale FD | May stop on device loss | Starts when device returns |
+
+`StartLimitBurst=10` within `StartLimitIntervalSec=300` prevents restart loops if the hardware is truly broken.
+
+After deploying or changing the udev rule:
 
 ```bash
-sudo systemctl restart arduino-relay-daemon
+sudo cp configs/templates/99-serial-devices.rules /etc/udev/rules.d/
+sudo udevadm control --reload-rules
+```
+
+### 7.4 When manual restart is still needed
+
+If all three pieces are deployed, recovery is automatic in normal cases. Manual action is still needed when:
+
+| Situation | Fix |
+|-----------|-----|
+| Service **failed** after USB unplug (udev rule missing or not reloaded) | Deploy `99-serial-devices.rules`, run `udevadm control --reload-rules`, then `systemctl start arduino-relay-daemon` |
+| Restart limit reached (10 starts in 5 minutes) | `systemctl reset-failed arduino-relay-daemon` then `systemctl start` |
+
+```bash
+sudo systemctl reset-failed arduino-relay-daemon
+sudo systemctl start arduino-relay-daemon
 arduino_relay_control.py status
 ```
 

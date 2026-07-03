@@ -6,7 +6,7 @@ Installs the Arduino-based relay daemon used by PDUDaemon to power-cycle the DUT
 
 - Installs `python3-serial`.
 - Copies `scripts/arduino/arduino_daemon.py` and `scripts/arduino/arduino_relay_control.py` to `/usr/local/bin/`.
-- Installs the `99-serial-devices.rules` udev rule from `configs/templates/`. This rule creates a stable `/dev/arduino-relay` symlink when the Arduino is plugged in (matches on USB vendor/product ID + serial), so the daemon does not break when `ttyACM*` numbering changes.
+- Installs the `99-serial-devices.rules` udev rule from `configs/templates/`. This rule creates a stable `/dev/arduino-relay` symlink when the Arduino is plugged in (matches on USB vendor/product ID + serial), so the daemon does not break when `ttyACM*` numbering changes. The Arduino rule also sets `SYSTEMD_WANTS` so the daemon restarts when the device reappears after USB disconnect (see [Self-healing](../../../docs/configuracion/arduino-relay.md#self-healing)).
 - Installs and enables a `arduino-relay-daemon.service` systemd unit that opens `/dev/arduino-relay` and exposes a small TCP API used by PDUDaemon.
 
 ## Variables

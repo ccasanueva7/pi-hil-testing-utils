@@ -15,11 +15,12 @@ systemctl status \
   pdudaemon \
   ser2net \
   dnsmasq \
+  arduino-relay-daemon \
   prometheus \
   grafana-server
 ```
 
-All seven should be `active (running)`. Quick fix for any single failed unit:
+All eight should be `active (running)`. Quick fix for any single failed unit:
 
 ```sh
 sudo systemctl restart <unit>
@@ -97,10 +98,10 @@ A green run with `Collected N new report.xml file(s)` confirms `LIME_PACKAGES_TO
 ## Quick "everything looks fine" one-liner
 
 ```sh
-systemctl is-active labgrid-coordinator labgrid-exporter pdudaemon ser2net dnsmasq prometheus grafana-server
+systemctl is-active labgrid-coordinator labgrid-exporter pdudaemon ser2net dnsmasq arduino-relay-daemon prometheus grafana-server
 ```
 
-Should print seven lines of `active`. Any other state → drill down per section above.
+Should print eight lines of `active`. Any other state - drill down per section above.
 
 ## When something does break
 

@@ -16,23 +16,15 @@ that is RAM-bootable on its own.
 This page documents two devices that fall outside that path and the
 prototype work that was rejected.
 
-## Devices not in the matrix
+## Devices with special build paths
 
-### `librerouter_librerouter-v1` (ath79/generic, MIPS)
+### `librerouter_librerouter-v1` (ath79/generic, MIPS) - dual-TFTP
 
-Removed from `targets.yml` entirely. ath79/generic boots the legacy
-uImage format and OpenWrt builds a single kernel image with the
-initramfs CPIO **statically linked at compile time** via
-`CONFIG_INITRAMFS_SOURCE`. The shipped `<profile>-kernel.bin` already
-has the upstream OpenWrt rootfs hardcoded into the kernel, and
-ImageBuilder cannot substitute our LibreMesh CPIO without recompiling
-the kernel - which it cannot do, because it ships no kernel sources,
-no compiler and no build infrastructure.
-
-The labgrid YAML
-`libremesh-tests/targets/librerouter_librerouter-v1.yaml` is preserved
-for manual local/remote test runs against a pre-staged
-`*-initramfs-kernel.bin`.
+Integrated into the CI matrix via `IMAGE_FORMAT=dual-tftp`. The ath79
+ImageBuilder cannot produce an initramfs kernel
+(`CONFIG_INITRAMFS_SOURCE` requires kernel recompilation), so the CI
+ships two separate TFTP artifacts instead - see
+[dual-TFTP boot](#dual-tftp-boot-kernel--ramdisk-uimage) below.
 
 ### `linksys_e8450` legacy (mediatek/mt7622, NAND non-UBI)
 
@@ -77,58 +69,110 @@ removing the device from CI:
 
 [lr-uboot]: https://github.com/LibreRouterOrg/u-boot
 
-## The only viable path: full source build
+## Dual-TFTP boot (kernel + ramdisk uImage)
 
-The only path that produces a real RAM-bootable LibreMesh image for
-`librerouter_librerouter-v1` is a full OpenWrt source-tree build
-(`make world`) with `CONFIG_INITRAMFS_SOURCE` pointing at the
-LibreMesh CPIO. A prototype (`build_image_source.sh`, ~780 lines)
-wired this up against `v24.10.6` with GHA caching: cold runs took
-~50-60 min, warm runs ~10-20 min.
+Instead of embedding the CPIO in the kernel, the CI ships two separate
+TFTP artifacts. U-Boot loads each to a distinct RAM address and
+`bootm <kernel> <ramdisk>` passes the initrd boundaries natively.
 
-Discarded because:
+| Artifact | RAM address | Source |
+|---|---|---|
+| `kernel.bin` (uImage lzma + appended DTB) | `0x82000000` | ImageBuilder pre-built |
+| `rootfs.uimage` (uImage ramdisk wrapping newc CPIO) | `0x84000FC0` | `build_image.sh` via `mkimage -T ramdisk` |
 
-- LibreMesh CI testing on ath79 is not a release-blocker.
-- The full source build dominates wall-clock time for the entire
-  workflow even when run in parallel with the other matrix entries.
-- The maintenance surface (toolchain bumps, OpenWrt release tag
-  drift, feed src-link plumbing, `libremesh.mk` symlink) is
-  significant.
+U-Boot sequence:
 
-The prototype lives in the git history if it ever becomes worth
-reviving.
+```
+tftp 0x82000000                         # kernel
+tftp 0x84000FC0 ${bootfile_initrd}      # ramdisk uImage
+bootm 0x82000000 0x84000FC0
+```
 
-## Resurrecting source build for ath79
+### Why not `rd_start`/`rd_size` bootargs?
 
-If anyone resurrects the source-build path, the key inputs are:
+The ImageBuilder kernel for ath79 (OpenWrt 24.10) ships with:
 
-1. Check out `openwrt/openwrt` at the matching tag (`v24.10.6`).
-2. `make defconfig` with:
+- `CONFIG_MIPS_CMDLINE_FROM_DTB=y` - take kernel arguments from the
+  Device Tree (DTB) embedded in the kernel image.
+- `CONFIG_CMDLINE_BOOL=y` with `CONFIG_CMDLINE="rootfstype=squashfs,jffs2"`.
 
-    ```text
-    CONFIG_TARGET_ath79=y
-    CONFIG_TARGET_ath79_generic=y
-    CONFIG_TARGET_ath79_generic_DEVICE_librerouter_librerouter-v1=y
-    CONFIG_TARGET_ROOTFS_INITRAMFS=y
-    CONFIG_TARGET_INITRAMFS_COMPRESSION_LZMA=y
-    ```
+The LibreRouter DT (`qca955x.dtsi`) sets
+`chosen { bootargs = "console=ttyS0,115200n8"; }`. Because
+`MIPS_CMDLINE_DTB_EXTEND` is not enabled, U-Boot `bootargs` (including
+`rd_start=`, `rd_size=`, or `initrd=`) are not merged into the command
+line the kernel actually uses. The serial log therefore shows only
+`console=ttyS0,115200n8 rootfstype=squashfs,jffs2`.
 
-3. Wire `pi-lime-packages` as a `src-link` feed and make sure
-   `libremesh.mk` is reachable from `package/feeds/lime_packages/`
-   (otherwise the `include ../../libremesh.mk` lookups in
-   `lime-proto-*` / `lime-hwd-*` silently drop those packages).
-4. `make -j$(nproc) world` produces
-   `bin/targets/ath79/generic/openwrt-*-librerouter_librerouter-v1-initramfs-kernel.bin`.
+Note: `CONFIG_CMDLINE_OVERRIDE` is **not** set on ath79 in OpenWrt
+24.10 (`target/linux/ath79/config-6.6`). That option would force the
+compiled-in line only; on LibreRouter the same practical outcome comes
+from `MIPS_CMDLINE_FROM_DTB` plus DT `chosen/bootargs`.
+
+### How two-argument `bootm` bypasses this
+
+When U-Boot receives `bootm <kernel_addr> <ramdisk_addr>`, its
+`do_bootm_linux()` (in `lib_mips/mips_linux.c` on the Atheros 1.1.x
+fork) reads the uImage header at `<ramdisk_addr>`, computes the data
+boundaries, and passes `initrd_start`/`initrd_end` to the kernel via
+`linux_env_set()`. This mechanism operates through the MIPS boot
+parameter block, not through the kernel command line, so DT bootargs and
+`MIPS_CMDLINE_FROM_DTB` do not block initrd loading.
+
+### Page alignment
+
+The ramdisk loads at `0x84000FC0` (not `0x84000000`) so the CPIO
+data - which starts 64 bytes past the uImage header - lands at
+`0x84001000`, a 4K page boundary. The kernel rejects non-aligned
+initrd with `initrd start must be page aligned`.
+
+### INITRAMFS=1 in `/init`
+
+The CPIO's `/init` must export `INITRAMFS=1` before exec'ing
+`/sbin/init` (procd). Without this variable, OpenWrt's
+`/lib/preinit/80_mount_root` registers `do_mount_root`, which finds the
+`rootfs_data` partition on flash, attempts a jffs2 overlay +
+`pivot_root` (which fails on rootfs), and the ramoverlay fallback loses
+`/proc`. Result: `lime-config` never runs, hostname stays `(none)`.
+
+`build_image.sh` creates this script (matching OpenWrt upstream
+`target/linux/generic/other-files/init`):
+
+```sh
+#!/bin/sh
+export INITRAMFS=1
+exec /sbin/init
+```
+
+### Requirements
+
+- `CONFIG_BLK_DEV_INITRD=y` (ath79/generic enables it via
+  `FEATURES:=ramdisk`).
+- U-Boot must support two-argument `bootm` with `IH_TYPE_RAMDISK`
+  (Atheros 1.1.x does).
+- The rootfs CPIO must contain `/init` with `INITRAMFS=1`.
+
+`build_image.sh` implements this as `IMAGE_FORMAT=dual-tftp`.
+`targets.yml` entry: `librerouter_v1` with `image_format: dual-tftp`.
+
+## Rejected: full source build
+
+A full OpenWrt source-tree build (`make world`) with
+`CONFIG_INITRAMFS_SOURCE` pointing at the LibreMesh CPIO was
+prototyped (`build_image_source.sh`, ~780 lines, `v24.10.6`).
+Cold: ~50-60 min, warm: ~10-20 min. Discarded for excessive build
+time and maintenance surface. The prototype lives in git history
+(commit `057282fd`) if ever needed as fallback.
 
 ## Manual lab runs
 
-For local lab runs against a manually-built artifact:
+For local lab runs with the dual-TFTP path:
 
 ```bash
 labgrid-client -p labgrid-fcefyn-librerouter_1 acquire
 export LG_PLACE=labgrid-fcefyn-librerouter_1
-export LG_ENV=targets/librerouter_librerouter-v1.yaml
-export LG_IMAGE=/srv/tftp/firmwares/librerouter_librerouter-v1/libremesh/<artifact>.bin
+export LG_ENV=targets/librerouter_v1.yaml
+export LG_IMAGE=/path/to/kernel.bin
+export LG_IMAGE_INITRD=/path/to/rootfs.uimage
 uv run python -m pytest tests/test_libremesh.py tests/test_base.py tests/test_lan.py -v
 labgrid-client -p labgrid-fcefyn-librerouter_1 release
 ```
@@ -137,5 +181,6 @@ labgrid-client -p labgrid-fcefyn-librerouter_1 release
 
 - [CI: firmware build pipeline](../lime-packages-ci-flow.md) - the
   high-level pipeline that consumes `BUILD_INITRAMFS=1` artifacts.
-- `tools/ci/build_image.sh` - the manual `mkimage` repack flow.
+- `tools/ci/build_image.sh` - the `mkimage` repack flow and
+  `dual-tftp` artifact emission.
 - `.github/ci/targets.yml` - `build_initramfs` / `test_firmware` keys.

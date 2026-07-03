@@ -1,12 +1,15 @@
 [Unit]
 Description=Arduino Relay Daemon - persistent serial connection to avoid auto-reset
-After=network.target systemd-udev-settle.service
+After=dev-arduino\x2drelay.device
+BindsTo=dev-arduino\x2drelay.device
 
 [Service]
 Type=simple
 ExecStart=/usr/bin/python3 /usr/local/bin/arduino_daemon.py start --port /dev/arduino-relay
 Restart=on-failure
 RestartSec=5
+StartLimitIntervalSec=300
+StartLimitBurst=10
 User=root
 
 [Install]
