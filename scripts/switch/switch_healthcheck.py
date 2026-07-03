@@ -102,7 +102,10 @@ def check_switch_pvids(
         elif actual != expected:
             logger.warning(
                 "  MISMATCH %s (port %d): expected PVID %d, got %d",
-                name, port, expected, actual,
+                name,
+                port,
+                expected,
+                actual,
             )
             all_ok = False
         elif not quiet:
@@ -119,11 +122,14 @@ def main():
         description="Verify switch DUT port PVIDs against dut-config.yaml",
     )
     parser.add_argument(
-        "--config", "-c",
+        "--config",
+        "-c",
         help="Path to dut-config.yaml (default: SWITCH_DUT_CONFIG or /etc/testbed/dut-config.yaml)",
     )
     parser.add_argument(
-        "--quiet", "-q", action="store_true",
+        "--quiet",
+        "-q",
+        action="store_true",
         help="Suppress output on success (exit code only)",
     )
     args = parser.parse_args()

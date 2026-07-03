@@ -71,7 +71,7 @@ def generate_places_yaml(
 ):
     """
     Generate places.yaml from labnet.yaml and template.
-    
+
     Args:
         lab_name: Name of the lab (e.g., 'labgrid-fcefyn')
         labnet_path: Path to labnet.yaml
@@ -82,89 +82,81 @@ def generate_places_yaml(
     if not labnet_path.exists():
         print(f"Error: labnet.yaml not found at {labnet_path}", file=sys.stderr)
         sys.exit(1)
-    
-    with open(labnet_path, 'r') as f:
+
+    with open(labnet_path, "r") as f:
         labnet = yaml.safe_load(f)
-    
+
     # Verify lab exists
-    if lab_name not in labnet.get('labs', {}):
+    if lab_name not in labnet.get("labs", {}):
         print(f"Error: Lab '{lab_name}' not found in labnet.yaml", file=sys.stderr)
         print(f"Available labs: {', '.join(labnet.get('labs', {}).keys())}", file=sys.stderr)
         sys.exit(1)
-    
+
     # Read template
     if not template_path.exists():
         print(f"Error: Template not found at {template_path}", file=sys.stderr)
         sys.exit(1)
-    
-    with open(template_path, 'r') as f:
+
+    with open(template_path, "r") as f:
         template_str = f.read()
-    
+
     # Render template
     template = Template(template_str)
     places_yaml = template.render(
-        labnet=labnet,
-        inventory_hostname=lab_name,
-        ansible_date_time={'epoch': int(datetime.now().timestamp())}
+        labnet=labnet, inventory_hostname=lab_name, ansible_date_time={"epoch": int(datetime.now().timestamp())}
     )
-    
+
     # Create output directory if needed
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     # Write places.yaml
-    with open(output_path, 'w') as f:
+    with open(output_path, "w") as f:
         f.write(places_yaml)
-    
+
     # Count generated places
-    place_count = sum(1 for line in places_yaml.split('\n') if line.strip().endswith(':') and 'labgrid-' in line)
-    
+    place_count = sum(1 for line in places_yaml.split("\n") if line.strip().endswith(":") and "labgrid-" in line)
+
     print("✓ places.yaml generated successfully")
     print(f"  Output: {output_path}")
     print(f"  Lab: {lab_name}")
     print(f"  Places generated: {place_count}")
-    
+
     # List generated places
     print("\nGenerated places:")
-    for line in places_yaml.split('\n'):
-        if line.strip().endswith(':') and 'labgrid-' in line:
-            place_name = line.strip().rstrip(':')
+    for line in places_yaml.split("\n"):
+        if line.strip().endswith(":") and "labgrid-" in line:
+            place_name = line.strip().rstrip(":")
             print(f"  - {place_name}")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Generate labgrid places.yaml from labnet.yaml template',
+        description="Generate labgrid places.yaml from labnet.yaml template",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=__doc__
+        epilog=__doc__,
     )
-    
+
+    parser.add_argument("--lab", default="labgrid-fcefyn", help="Lab name (default: labgrid-fcefyn)")
+
     parser.add_argument(
-        '--lab',
-        default='labgrid-fcefyn',
-        help='Lab name (default: labgrid-fcefyn)'
+        "--labnet", type=Path, help="Path to labnet.yaml (default: OPENWRT_TESTS_DIR or sibling openwrt-tests)"
     )
-    
+
     parser.add_argument(
-        '--labnet',
+        "--template",
         type=Path,
-        help='Path to labnet.yaml (default: OPENWRT_TESTS_DIR or sibling openwrt-tests)'
+        help="Path to places.yaml.j2 (default: openwrt-tests ansible/files/coordinator/places.yaml.j2)",
     )
-    
+
     parser.add_argument(
-        '--template',
+        "--output",
         type=Path,
-        help='Path to places.yaml.j2 (default: openwrt-tests ansible/files/coordinator/places.yaml.j2)'
+        default=Path.home() / "labgrid-coordinator" / "places.yaml",
+        help="Output path for places.yaml (default: ~/labgrid-coordinator/places.yaml)",
     )
-    
-    parser.add_argument(
-        '--output',
-        type=Path,
-        default=Path.home() / 'labgrid-coordinator' / 'places.yaml',
-        help='Output path for places.yaml (default: ~/labgrid-coordinator/places.yaml)'
-    )
-    
+
     args = parser.parse_args()
-    
+
     if args.labnet is None or args.template is None:
         openwrt_root = find_openwrt_tests_dir()
         if openwrt_root is None:
@@ -179,10 +171,8 @@ def main():
             args.labnet = openwrt_root / "labnet.yaml"
 
         if args.template is None:
-            args.template = (
-                openwrt_root / "ansible" / "files" / "coordinator" / "places.yaml.j2"
-            )
-    
+            args.template = openwrt_root / "ansible" / "files" / "coordinator" / "places.yaml.j2"
+
     generate_places_yaml(
         lab_name=args.lab,
         labnet_path=args.labnet,
@@ -191,6 +181,5 @@ def main():
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-

@@ -26,10 +26,14 @@ REPO_ROOT = SCRIPT_DIR.parent
 SSH_TIMEOUT = 30
 SSH_BASE_CMD = [
     "ssh",
-    "-o", "StrictHostKeyChecking=no",
-    "-o", "UserKnownHostsFile=/dev/null",
-    "-o", f"ConnectTimeout={SSH_TIMEOUT}",
-    "-o", "LogLevel=ERROR",
+    "-o",
+    "StrictHostKeyChecking=no",
+    "-o",
+    "UserKnownHostsFile=/dev/null",
+    "-o",
+    f"ConnectTimeout={SSH_TIMEOUT}",
+    "-o",
+    "LogLevel=ERROR",
 ]
 
 OPKG_PACKAGES = [
@@ -40,7 +44,7 @@ OPKG_PACKAGES = [
     "luci-lib-nixio",
 ]
 
-FILESYSTEM_LUA = r'''local nix = require "nixio"
+FILESYSTEM_LUA = r"""local nix = require "nixio"
 
 local function scrape()
   local metric_size_bytes = metric("node_filesystem_size_bytes", "gauge")
@@ -79,7 +83,7 @@ local function scrape()
 end
 
 return { scrape = scrape }
-'''
+"""
 
 
 def build_setup_script() -> str:
@@ -102,7 +106,7 @@ def build_setup_script() -> str:
         "/etc/init.d/prometheus-node-exporter-lua restart",
         "",
         "sleep 2",
-        'METRICS=$(wget -qO- http://127.0.0.1:9100/metrics 2>&1 | head -5)',
+        "METRICS=$(wget -qO- http://127.0.0.1:9100/metrics 2>&1 | head -5)",
         'if [ -n "$METRICS" ]; then',
         '  echo "VERIFY_OK"',
         '  echo "$METRICS"',
@@ -142,6 +146,7 @@ def find_dut_by_name(name: str, config_path: Path) -> dict | None:
     norm = name if name.startswith("/") else f"/dev/{name}"
     try:
         import yaml
+
         with open(config_path) as f:
             data = yaml.safe_load(f) or {}
         for dut_id, hw in (data.get("duts") or {}).items():
@@ -154,7 +159,9 @@ def find_dut_by_name(name: str, config_path: Path) -> dict | None:
 
 
 def run_on_dut(
-    dut: dict, script: str, dry_run: bool = False,
+    dut: dict,
+    script: str,
+    dry_run: bool = False,
 ) -> bool:
     """SSH into a DUT, run the setup script, return True on success."""
     dut_id = dut["id"]
